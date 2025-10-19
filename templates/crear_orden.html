@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block page_styles %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <form method="POST" action="{% url 'crear_orden' %}" id="main-order-form">
+        {% csrf_token %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h1 class="mb-4">Crear Nueva Orden</h1>
+                <div class="mb-3">
+                    {{ form.numero_orden_facturacion.label_tag }}
+                    {{ form.numero_orden_facturacion }}
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Ítems de la Orden</h5>
+                <div id="items-summary-container" class="mt-3">
+                    <!-- Item summaries will be added here -->
+                </div>
+                <div id="hidden-inputs-container">
+                    <!-- Hidden inputs for each item will be added here -->
+                </div>
+                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                    <i class="fas fa-plus"></i> Añadir Ítem
+                </button>
+            </div>
+            <div class="card-footer">
+                 <div class="mb-3">
+                    <label for="tags" class="form-label">Tags</label>
+                    <select class="form-control" id="tags" name="tags" multiple="multiple">
+                        <option value="Express">Express</option>
+                        <option value="Delivery">Delivery</option>
+                        <option value="Priority">Priority</option>
+                        <option value="Internal">Internal</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="fecha_entrega_manual" class="form-label">Fecha de Entrega Personalizada (Opcional)</label>
+                        <input type="datetime-local" id="fecha_entrega_manual" name="fecha_entrega_manual" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha de Entrega Sugerida</label>
+                        <div id="fecha-sugerida-container" class="border p-2 rounded bg-light">
+                            <span id="fecha-sugerida-texto">Calculando...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-end mt-3">
+                    <button type="submit" class="btn btn-success">Crear Orden</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addItemModalLabel">Añadir Nuevo Ítem</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Progress Bar -->
+                <div class="progress mb-4" style="height: 20px;">
+                    <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 16.66%;" aria-valuenow="16.66" aria-valuemin="0" aria-valuemax="100">Paso 1 de 6</div>
+                </div>
+
+                <div id="item-wizard">
+                    <!-- Step 1: Certificate Type -->
+                    <div class="step-card active" id="step-1">
+                        <h5 class="text-center">Paso 1: Tipo de Certificado</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo Certificado</label>
+                            <select name="tipo_certificado" class="form-select tipo-certificado-select" id="tipo_certificado_modal">
+                                <option value="GC_SENCILLA">GC Sencilla</option>
+                                <option value="GC_COMPLETA">GC Completa</option>
+                                <option value="ESCRITO">Escrito</option>
+                                <option value="DIAMANTE">Diamante</option>
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-primary next-step">Siguiente</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: What is it? -->
+                    <div class="step-card" id="step-2" style="display: none;">
+                        <h5 class="text-center">Paso 2: ¿Qué es?</h5>
+                        <div class="mb-3">
+                            <label class="form-label">¿Qué es?</label>
+                            <select name="que_es" class="form-select item-category-select" id="que_es_modal">
+                                <option value="JOYA" selected>Joya</option>
+                                <option value="PIEDRA">Piedra(s) Suelta(s)</option>
+                                <option value="LOTE">Lote de Gemas</option>
+                                <option value="VERBAL_A_GC">Verbal a GC</option>
+                                <option value="REIMPRESION">Reimpresión</option>
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-light prev-step">Anterior</button>
+                            <button type="button" class="btn btn-primary next-step">Siguiente</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Type of Jewel -->
+                    <div class="step-card" id="step-3" style="display: none;">
+                         <h5 class="text-center">Paso 3: Tipo de Joya</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Joya</label>
+                            <select name="tipo_joya" class="form-select tipo-joya-select" id="tipo_joya_modal">
+                                <option value="ANILLO">Anillo</option>
+                                <option value="DIJE">Dije</option>
+                                <option value="TOPOS">Topos</option>
+                                <option value="PULSERA">Pulsera</option>
+                                <option value="PULSERA_TENIS">Pulsera Tenis</option>
+                                <option value="SET">Set</option>
+                            </select>
+                        </div>
+                         <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-light prev-step">Anterior</button>
+                            <button type="button" class="btn btn-primary next-step">Siguiente</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Main Gemstone -->
+                    <div class="step-card" id="step-4" style="display: none;">
+                        <h5 class="text-center">Paso 4: Gema Principal</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Gema Principal</label>
+                            <select name="gema_principal" class="form-select gema-select" id="gema_principal_modal">
+                                {% for gema in gemas_principales %}<option value="{{ gema }}">{{ gema }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-light prev-step">Anterior</button>
+                            <button type="button" class="btn btn-primary next-step">Siguiente</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Quantity -->
+                    <div class="step-card" id="step-5" style="display: none;">
+                        <h5 class="text-center">Paso 5: Cantidad</h5>
+                         <div class="mb-3">
+                            <label class="form-label">Número de Gemas</label>
+                            <input type="number" name="cantidad_gemas_varios" class="form-control" placeholder="Cantidad..." id="cantidad_gemas_modal">
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-light prev-step">Anterior</button>
+                            <button type="button" class="btn btn-primary next-step">Siguiente</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Details -->
+                    <div class="step-card" id="step-6" style="display: none;">
+                        <h5 class="text-center">Paso 6: Detalles Finales</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Metal</label>
+                                <select name="metal" class="form-select" id="metal_modal">
+                                    <option value="ORO">Oro</option>
+                                    <option value="ORO_AMARILLO">Oro Amarillo</option>
+                                    <option value="ORO_ROSA">Oro Rosa</option>
+                                    <option value="PLATA">Plata</option>
+                                    <option value="BLANCO">Blanco</option>
+                                    <option value="ROSA">Rosa</option>
+                                    <option value="NEGRO">Negro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Forma de la Gema</label>
+                                <select name="forma_gema" class="form-select forma-gema-select" id="forma_gema_modal">
+                                    {% for forma in formas_gema %}<option value="{{ forma }}">{{ forma }}</option>{% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Peso Gema (cts)</label>
+                            <input type="number" step="0.01" name="peso_gema" class="form-control" placeholder="Ej: 1.25" id="peso_gema_modal">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Comentarios</label>
+                            <textarea name="comentarios" class="form-control" rows="1" id="comentarios_modal"></textarea>
+                        </div>
+
+                        <!-- Decorative Stones -->
+                        <div class="mt-4">
+                            <h6>Piedras Decorativas</h6>
+                            <div id="decorative-stones-container"></div>
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#addDecorativeStoneModal">Añadir Piedra Decorativa</button>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-between">
+                            <button type="button" class="btn btn-light prev-step">Anterior</button>
+                            <button type="button" class="btn btn-success" id="add-item-to-order">Añadir Ítem a la Orden</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Decorative Stone Modal -->
+<div class="modal fade" id="addDecorativeStoneModal" tabindex="-1" aria-labelledby="addDecorativeStoneModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDecorativeStoneModalLabel">Añadir Piedra Decorativa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="stone-type" class="form-label">Tipo de Piedra</label>
+                    <input type="text" class="form-control" id="stone-type">
+                </div>
+                <div class="mb-3">
+                    <label for="stone-weight" class="form-label">Peso (cts)</label>
+                    <input type="number" class="form-control" id="stone-weight">
+                </div>
+                <div class="mb-3">
+                    <label for="stone-quantity" class="form-label">Cantidad</label>
+                    <input type="number" class="form-control" id="stone-quantity">
+                </div>
+                <div class="mb-3">
+                    <label for="stone-color" class="form-label">Color (opcional)</label>
+                    <input type="text" class="form-control" id="stone-color">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="save-decorative-stone">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    $('#tags').select2();
+
+    let currentStep = 1;
+    const totalSteps = 6;
+    const progressBar = document.getElementById('progress-bar');
+    const itemWizard = document.getElementById('item-wizard');
+    let items = [];
+    let decorativeStones = [];
+
+    function showStep(stepNumber) {
+        const steps = itemWizard.querySelectorAll('.step-card');
+        steps.forEach(step => {
+            step.style.display = 'none';
+        });
+        const nextStep = itemWizard.querySelector(`#step-${stepNumber}`);
+        if (nextStep) {
+            nextStep.style.display = 'block';
+            updateProgressBar(stepNumber);
+            currentStep = stepNumber;
+        }
+    }
+
+    function updateProgressBar(stepNumber) {
+        const percentage = (stepNumber / totalSteps) * 100;
+        progressBar.style.width = `${percentage}%`;
+        progressBar.textContent = `Paso ${stepNumber} de ${totalSteps}`;
+    }
+
+    function nextStep() {
+        if (currentStep < totalSteps) {
+            showStep(currentStep + 1);
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 1) {
+            showStep(currentStep - 1);
+        }
+    }
+
+     function resetWizard() {
+        currentStep = 1;
+        showStep(1);
+        decorativeStones = [];
+        const modal = document.getElementById('addItemModal');
+        modal.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.type === 'radio' || el.type === 'checkbox') {
+                el.checked = false;
+            } else if (el.multiple) {
+                Array.from(el.options).forEach(opt => opt.selected = false);
+            } else {
+                el.value = '';
+            }
+        });
+        renderDecorativeStones();
+    }
+
+    itemWizard.addEventListener('click', function(e) {
+        if (e.target.classList.contains('next-step')) {
+            nextStep();
+        }
+        if (e.target.classList.contains('prev-step')) {
+            prevStep();
+        }
+    });
+
+    const decorativeStoneModalEl = document.getElementById('addDecorativeStoneModal');
+    const decorativeStoneModal = new bootstrap.Modal(decorativeStoneModalEl);
+
+    document.getElementById('save-decorative-stone').addEventListener('click', function() {
+        const stone = {
+            tipo_piedra: document.getElementById('stone-type').value,
+            peso: document.getElementById('stone-weight').value,
+            cantidad: document.getElementById('stone-quantity').value,
+            color: document.getElementById('stone-color').value,
+        };
+        decorativeStones.push(stone);
+        renderDecorativeStones();
+
+        document.getElementById('stone-type').value = '';
+        document.getElementById('stone-weight').value = '';
+        document.getElementById('stone-quantity').value = '';
+        document.getElementById('stone-color').value = '';
+
+        decorativeStoneModal.hide();
+    });
+
+    function renderDecorativeStones() {
+        const container = document.getElementById('decorative-stones-container');
+        container.innerHTML = '';
+        decorativeStones.forEach((stone, index) => {
+            const stoneEl = document.createElement('div');
+            stoneEl.className = 'd-flex justify-content-between align-items-center mb-2';
+            stoneEl.innerHTML = `
+                <span>${stone.cantidad} x ${stone.tipo_piedra} (${stone.peso} cts)</span>
+                <button type="button" class="btn btn-sm btn-danger remove-stone" data-index="${index}">Eliminar</button>
+            `;
+            container.appendChild(stoneEl);
+        });
+    }
+
+    document.getElementById('decorative-stones-container').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-stone')) {
+            const index = e.target.dataset.index;
+            decorativeStones.splice(index, 1);
+            renderDecorativeStones();
+        }
+    });
+
+    const mainModalEl = document.getElementById('addItemModal');
+    const mainModal = new bootstrap.Modal(mainModalEl);
+
+    document.getElementById('add-item-to-order').addEventListener('click', function() {
+        const itemData = {
+            tipo_certificado: document.getElementById('tipo_certificado_modal').value,
+            que_es: document.getElementById('que_es_modal').value,
+            tipo_joya: document.getElementById('tipo_joya_modal').value,
+            gema_principal: Array.from(document.getElementById('gema_principal_modal').selectedOptions).map(o => o.value).join(','),
+            cantidad_gemas: document.getElementById('cantidad_gemas_modal').value,
+            metal: document.getElementById('metal_modal').value,
+            forma_gema: document.getElementById('forma_gema_modal').value,
+            peso_gema: document.getElementById('peso_gema_modal').value,
+            comentarios: document.getElementById('comentarios_modal').value,
+            piedras_decorativas: decorativeStones,
+        };
+        items.push(itemData);
+        updateForm();
+
+        mainModal.hide();
+    });
+
+    mainModalEl.addEventListener('hidden.bs.modal', function (event) {
+        resetWizard();
+    })
+
+    function updateForm() {
+        const hiddenInputsContainer = document.getElementById('hidden-inputs-container');
+        const summaryContainer = document.getElementById('items-summary-container');
+        hiddenInputsContainer.innerHTML = '';
+        summaryContainer.innerHTML = '';
+
+        items.forEach((item, index) => {
+            const prefix = `item-${index}-`;
+            for (const [key, value] of Object.entries(item)) {
+                if (key === 'piedras_decorativas') {
+                    value.forEach((stone, stoneIndex) => {
+                        const stonePrefix = `${prefix}piedra_decorativa-${stoneIndex}-`;
+                        for (const [stoneKey, stoneValue] of Object.entries(stone)) {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = `${stonePrefix}${stoneKey}`;
+                            input.value = stoneValue;
+                            hiddenInputsContainer.appendChild(input);
+                        }
+                    });
+                } else {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `${prefix}${key}`;
+                    input.value = value;
+                    hiddenInputsContainer.appendChild(input);
+                }
+            }
+
+            const summaryCard = document.createElement('div');
+            summaryCard.className = 'card mb-2';
+            summaryCard.innerHTML = `
+                <div class="card-body">
+                    <h6>Ítem ${index + 1}: ${item.gema_principal}</h6>
+                    <p class="mb-1">Certificado: ${item.tipo_certificado}, Tipo: ${item.que_es} ${item.tipo_joya ? '(' + item.tipo_joya + ')' : ''}</p>
+                    <small>Cantidad: ${item.cantidad_gemas}</small>
+                </div>
+            `;
+            summaryContainer.appendChild(summaryCard);
+        });
+        // You'll need to re-implement the suggested date logic if you want to keep it.
+        // updateSuggestedDate();
+    }
+});
+</script>
+{% endblock %}

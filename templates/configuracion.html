@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="mb-4">Configuración de Tiempos Estimados (en Segundos)</h1>
+<p>Define los segundos para cada etapa (ej: 1 hora = 3600; 1 minuto = 60).</p>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle mb-0">
+                <thead class="table-light text-center">
+                    <tr>
+                        <th>Tipo de Ítem</th>
+                        <th>Tipo de Certificado</th>
+                        <th>Ingreso (seg)</th>
+                        <th>Fotografía (seg)</th>
+                        <th>Revisión (seg)</th>
+                        <th>Impresión (seg)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for tipo_item_label, configs in configs_agrupadas.items %}
+                    {% for config in configs %}
+                    <tr>
+                        {% if forloop.first %}
+                        <td rowspan="{{ configs|length }}" class="fw-bold align-middle bg-light">{{ tipo_item_label }}</td>
+                        {% endif %}
+                        <td>{{ config.get_tipo_certificado_display }}</td>
+                        {% with prefix=config.tipo_item|add:"_"|add:config.tipo_certificado %}
+                        <td><input type="number" step="1" min="0" class="form-control text-center" name="ingreso_{{ prefix }}" value="{% if config.tiempo_ingreso is not None %}{{ config.tiempo_ingreso }}{% endif %}"></td>
+                        <td><input type="number" step="1" min="0" class="form-control text-center" name="foto_{{ prefix }}" value="{% if config.tiempo_fotografia is not None %}{{ config.tiempo_fotografia }}{% endif %}"></td>
+                        <td><input type="number" step="1" min="0" class="form-control text-center" name="revision_{{ prefix }}" value="{% if config.tiempo_revision is not None %}{{ config.tiempo_revision }}{% endif %}"></td>
+                        <td><input type="number" step="1" min="0" class="form-control text-center" name="impresion_{{ prefix }}" value="{% if config.tiempo_impresion is not None %}{{ config.tiempo_impresion }}{% endif %}"></td>
+                        {% endwith %}
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer text-end">
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </div>
+    </div>
+</form>
+{% endblock %}

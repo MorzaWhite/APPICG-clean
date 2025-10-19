@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Panel General de Órdenes</h1>
+    <a href="{% url 'crear_orden' %}" class="btn btn-primary">Crear Nueva Orden</a>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col"># Orden Factura</th>
+                    <th scope="col">Ítems</th>
+                    <th scope="col">Etapa Actual</th>
+                    <th scope="col" style="width: 200px;">Tiempo Restante / Estado</th>
+                    <th scope="col" class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orden in ordenes_activas %}
+                <tr>
+                    <td>
+                        <strong>{{ orden.numero_orden_facturacion }}</strong>
+                    </td>
+                    <td>
+                        <ul class="list-unstyled mb-0">
+                            {% for item in orden.items.all %}
+                                <li>{{ item.numero_item }}. {{ item.descripcion_texto }}</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <span class="badge bg-info">{{ orden.get_estado_actual_display }}</span>
+                    </td>
+                    <td>
+                        {# --- INICIO DE LA CORRECCIÓN --- #}
+                        {# Buscamos el ÚLTIMO ítem de la orden, que es el que tiene la fecha de entrega final. #}
+                        {% with ultimo_item=orden.items.all.last %}
+                            {% if ultimo_item and ultimo_item.fecha_limite_etapa %}
+                                <div class="countdown" data-deadline="{{ ultimo_item.fecha_limite_etapa|date:'c' }}">
+                                    Calculando...
+                                </div>
+                            {% else %}
+                                <span class="badge bg-secondary">N/A</span>
+                            {% endif %}
+                        {% endwith %}
+                        {# --- FIN DE LA CORRECCIÓN --- #}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'detalle_orden' orden.id %}" class="btn btn-sm btn-outline-primary">Ver Detalles</a>
+                        
+                        {# El botón de avanzar se muestra si la orden aún no está finalizada. #}
+                        {% if orden.get_proxima_etapa %}
+                            <form action="{% url 'avanzar_etapa' orden.id %}" method="POST" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success">Finalizar Etapa</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted p-5">
+                        <p class="mb-0">¡Felicidades! No hay órdenes activas en el sistema.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
