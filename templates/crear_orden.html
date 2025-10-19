@@ -95,6 +95,19 @@
                         </div>
                     </div>
 
+                    <!-- Step 3.5: Set Components -->
+                    <div class="step-card" id="step-set-components" style="display: none;">
+                        <h5 class="text-center">Paso 3.5: Componentes del Set</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Componentes</label>
+                            <input type="text" name="componentes_set" class="form-control" id="componentes_set_modal" placeholder="Ej: Anillo, Aretes, Dije">
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-light prev-step">Anterior</button>
+                            <button type="button" class="btn btn-primary next-step">Siguiente</button>
+                        </div>
+                    </div>
+
                     <!-- Step 2: What is it? -->
                     <div class="step-card" id="step-2" style="display: none;">
                         <h5 class="text-center">Paso 2: ¿Qué es?</h5>
@@ -134,14 +147,21 @@
                         </div>
                     </div>
 
-                    <!-- Step 4: Main Gemstone -->
+                    <!-- Step 4: Main Gemstone or Reference Code -->
                     <div class="step-card" id="step-4" style="display: none;">
-                        <h5 class="text-center">Paso 4: Gema Principal</h5>
-                        <div class="mb-3">
+                        <!-- Gema Principal -->
+                        <div class="mb-3" id="gema-principal-group">
+                            <h5 class="text-center">Paso 4: Gema Principal</h5>
                             <label class="form-label">Gema Principal</label>
                             <select name="gema_principal" class="form-select gema-select" id="gema_principal_modal">
                                 {% for gema in gemas_principales %}<option value="{{ gema }}">{{ gema }}</option>{% endfor %}
                             </select>
+                        </div>
+                        <!-- Código de Referencia -->
+                        <div class="mb-3" id="codigo-referencia-group" style="display: none;">
+                             <h5 class="text-center">Paso 4: Código de Referencia</h5>
+                            <label class="form-label">Código de Referencia</label>
+                            <input type="text" name="codigo_referencia" class="form-control" id="codigo_referencia_modal" placeholder="Ej: 12345-C">
                         </div>
                         <div class="d-flex justify-content-between">
                             <button type="button" class="btn btn-light prev-step">Anterior</button>
@@ -213,6 +233,19 @@
 </div>
 
 <!-- Add Decorative Stone Modal -->
+<!-- Toast Container for Success Messages -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="success-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Éxito</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            Ítem añadido correctamente.
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="addDecorativeStoneModal" tabindex="-1" aria-labelledby="addDecorativeStoneModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -253,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
     $('#tags').select2();
 
     let currentStep = 1;
-    const totalSteps = 6;
+    const totalSteps = 7;
     const progressBar = document.getElementById('progress-bar');
     const itemWizard = document.getElementById('item-wizard');
     let items = [];
@@ -261,14 +294,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showStep(stepNumber) {
         const steps = itemWizard.querySelectorAll('.step-card');
-        steps.forEach(step => {
-            step.style.display = 'none';
-        });
+        steps.forEach(step => step.style.display = 'none');
+
         const nextStep = itemWizard.querySelector(`#step-${stepNumber}`);
         if (nextStep) {
             nextStep.style.display = 'block';
             updateProgressBar(stepNumber);
             currentStep = stepNumber;
+        }
+
+        // Handle conditional fields for step 4
+        if (stepNumber === 4) {
+            const queEs = document.getElementById('que_es_modal').value;
+            const gemaGroup = document.getElementById('gema-principal-group');
+            const codigoGroup = document.getElementById('codigo-referencia-group');
+
+            if (queEs === 'VERBAL_A_GC' || queEs === 'REIMPRESION') {
+                gemaGroup.style.display = 'none';
+                codigoGroup.style.display = 'block';
+            } else {
+                gemaGroup.style.display = 'block';
+                codigoGroup.style.display = 'none';
+            }
         }
     }
 
@@ -279,14 +326,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function nextStep() {
-        if (currentStep < totalSteps) {
-            showStep(currentStep + 1);
+        let next = currentStep + 1;
+        // Skip step 3.5 if not a SET
+        if (currentStep === 3 && document.getElementById('tipo_joya_modal').value !== 'SET') {
+            next = 4;
+        }
+        if (next <= totalSteps) {
+            showStep(next);
         }
     }
 
     function prevStep() {
-        if (currentStep > 1) {
-            showStep(currentStep - 1);
+        let prev = currentStep - 1;
+        // Skip step 3.5 if not a SET
+        if (currentStep === 4 && document.getElementById('tipo_joya_modal').value !== 'SET') {
+            prev = 3;
+        }
+        if (prev >= 1) {
+            showStep(prev);
         }
     }
 
@@ -304,6 +361,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 el.value = '';
             }
         });
+        document.getElementById('codigo_referencia_modal').value = '';
+        document.getElementById('componentes_set_modal').value = '';
         renderDecorativeStones();
     }
 
@@ -363,22 +422,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const mainModal = new bootstrap.Modal(mainModalEl);
 
     document.getElementById('add-item-to-order').addEventListener('click', function() {
+        let comentarios = document.getElementById('comentarios_modal').value;
+        if (decorativeStones.length > 0) {
+            const stoneSummary = decorativeStones.map(s => `${s.cantidad} ${s.tipo_piedra} (${s.peso} cts)`).join('; ');
+            comentarios += ` [Piedras decorativas: ${stoneSummary}]`;
+        }
+
         const itemData = {
             tipo_certificado: document.getElementById('tipo_certificado_modal').value,
             que_es: document.getElementById('que_es_modal').value,
             tipo_joya: document.getElementById('tipo_joya_modal').value,
             gema_principal: Array.from(document.getElementById('gema_principal_modal').selectedOptions).map(o => o.value).join(','),
+            codigo_referencia: document.getElementById('codigo_referencia_modal').value,
+            componentes_set: document.getElementById('componentes_set_modal').value,
             cantidad_gemas: document.getElementById('cantidad_gemas_modal').value,
             metal: document.getElementById('metal_modal').value,
             forma_gema: document.getElementById('forma_gema_modal').value,
             peso_gema: document.getElementById('peso_gema_modal').value,
-            comentarios: document.getElementById('comentarios_modal').value,
-            piedras_decorativas: decorativeStones,
+            comentarios: comentarios,
         };
         items.push(itemData);
         updateForm();
 
         mainModal.hide();
+
+        const successToast = new bootstrap.Toast(document.getElementById('success-toast'));
+        successToast.show();
     });
 
     mainModalEl.addEventListener('hidden.bs.modal', function (event) {
@@ -392,26 +461,13 @@ document.addEventListener('DOMContentLoaded', function() {
         summaryContainer.innerHTML = '';
 
         items.forEach((item, index) => {
-            const prefix = `item-${index}-`;
+            // Unprefixed fields for backend compatibility
             for (const [key, value] of Object.entries(item)) {
-                if (key === 'piedras_decorativas') {
-                    value.forEach((stone, stoneIndex) => {
-                        const stonePrefix = `${prefix}piedra_decorativa-${stoneIndex}-`;
-                        for (const [stoneKey, stoneValue] of Object.entries(stone)) {
-                            const input = document.createElement('input');
-                            input.type = 'hidden';
-                            input.name = `${stonePrefix}${stoneKey}`;
-                            input.value = stoneValue;
-                            hiddenInputsContainer.appendChild(input);
-                        }
-                    });
-                } else {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = `${prefix}${key}`;
-                    input.value = value;
-                    hiddenInputsContainer.appendChild(input);
-                }
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key; // Use the correct name without prefix
+                input.value = value;
+                hiddenInputsContainer.appendChild(input);
             }
 
             const summaryCard = document.createElement('div');
@@ -426,7 +482,33 @@ document.addEventListener('DOMContentLoaded', function() {
             summaryContainer.appendChild(summaryCard);
         });
         // You'll need to re-implement the suggested date logic if you want to keep it.
-        // updateSuggestedDate();
+        updateSuggestedDate();
+    }
+
+    function updateSuggestedDate() {
+        const fechaSugeridaContainer = document.getElementById('fecha-sugerida-texto');
+        fechaSugeridaContainer.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Calculando...';
+
+        fetch("{% url 'api_calcular_fecha_sugerida' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ items: items })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.fecha_sugerida) {
+                fechaSugeridaContainer.textContent = data.fecha_sugerida;
+            } else {
+                fechaSugeridaContainer.textContent = 'No disponible';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching suggested date:', error);
+            fechaSugeridaContainer.textContent = 'Error al calcular';
+        });
     }
 });
 </script>
