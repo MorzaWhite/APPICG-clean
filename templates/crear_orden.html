@@ -302,21 +302,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-     function resetWizard() {
-        currentStep = 1;
-        showStep(1);
+    function resetWizard() {
+        currentStep = 1; // Explicitly set currentStep back to 1
+        showStep(1); // Show the first step
+
         const modal = document.getElementById('addItemModal');
-        modal.querySelectorAll('input, select, textarea').forEach(el => {
-            if (el.type === 'radio' || el.type === 'checkbox') {
-                el.checked = false;
-            } else if (el.multiple) {
-                Array.from(el.options).forEach(opt => opt.selected = false);
+
+        // Reset all form elements within the modal
+        const formElements = modal.querySelectorAll('input, select, textarea');
+        formElements.forEach(el => {
+            const tagName = el.tagName.toLowerCase();
+            if (tagName === 'select') {
+                el.selectedIndex = 0; // Reset to the first option
+            } else if (el.type === 'checkbox' || el.type === 'radio') {
+                el.checked = false; // Uncheck
             } else {
-                el.value = '';
+                el.value = ''; // Clear value for text, number, textarea, etc.
             }
         });
-        document.getElementById('codigo_referencia_modal').value = '';
-        document.getElementById('componentes_set_modal').value = '';
+
+        // Ensure conditional fields are hidden correctly
+        document.getElementById('gema-principal-group').style.display = 'block';
+        document.getElementById('codigo-referencia-group').style.display = 'none';
     }
 
     itemWizard.addEventListener('click', function(e) {
@@ -332,26 +339,37 @@ document.addEventListener('DOMContentLoaded', function() {
     const mainModal = new bootstrap.Modal(mainModalEl);
 
     document.getElementById('add-item-to-order').addEventListener('click', function() {
-        const itemData = {
-            tipo_certificado: document.getElementById('tipo_certificado_modal').value,
-            que_es: document.getElementById('que_es_modal').value,
-            tipo_joya: document.getElementById('tipo_joya_modal').value,
-            gema_principal: Array.from(document.getElementById('gema_principal_modal').selectedOptions).map(o => o.value).join(','),
-            codigo_referencia: document.getElementById('codigo_referencia_modal').value,
-            componentes_set: document.getElementById('componentes_set_modal').value,
-            cantidad_gemas: document.getElementById('cantidad_gemas_modal').value,
-            metal: document.getElementById('metal_modal').value,
-            forma_gema: document.getElementById('forma_gema_modal').value,
-            peso_gema: document.getElementById('peso_gema_modal').value,
-            comentarios: document.getElementById('comentarios_modal').value,
-        };
-        items.push(itemData);
-        updateForm();
+        try {
+            const itemData = {
+                tipo_certificado: document.getElementById('tipo_certificado_modal').value,
+                que_es: document.getElementById('que_es_modal').value,
+                tipo_joya: document.getElementById('tipo_joya_modal').value,
+                gema_principal: Array.from(document.getElementById('gema_principal_modal').selectedOptions).map(o => o.value).join(','),
+                codigo_referencia: document.getElementById('codigo_referencia_modal').value,
+                componentes_set: document.getElementById('componentes_set_modal').value,
+                cantidad_gemas: document.getElementById('cantidad_gemas_modal').value,
+                metal: document.getElementById('metal_modal').value,
+                forma_gema: document.getElementById('forma_gema_modal').value,
+                peso_gema: document.getElementById('peso_gema_modal').value,
+                comentarios: document.getElementById('comentarios_modal').value,
+            };
+            items.push(itemData);
+            updateForm();
 
-        mainModal.hide();
+            // Show success toast
+            const successToast = new bootstrap.Toast(document.getElementById('success-toast'));
+            successToast.show();
 
-        const successToast = new bootstrap.Toast(document.getElementById('success-toast'));
-        successToast.show();
+            // Hide the modal after a short delay to allow the toast to be seen
+            setTimeout(() => {
+                mainModal.hide();
+            }, 500);
+
+        } catch (error) {
+            // Show error toast
+            const errorToast = new bootstrap.Toast(document.getElementById('error-toast'));
+            errorToast.show();
+        }
     });
 
     mainModalEl.addEventListener('hidden.bs.modal', function (event) {
@@ -398,8 +416,33 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             summaryContainer.appendChild(summaryCard);
         });
-        // You'll need to re-implement the suggested date logic if you want to keep it.
-        // updateSuggestedDate();
+        updateSuggestedDate();
+    }
+
+    function updateSuggestedDate() {
+        const fechaSugeridaTexto = document.getElementById('fecha-sugerida-texto');
+        fechaSugeridaTexto.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...';
+
+        fetch("{% url 'api_calcular_fecha_sugerida' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ items: items })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.fecha_sugerida) {
+                fechaSugeridaTexto.textContent = data.fecha_sugerida;
+            } else {
+                fechaSugeridaTexto.textContent = 'No disponible';
+            }
+        })
+        .catch(error => {
+            console.error('Error calculating suggested date:', error);
+            fechaSugeridaTexto.textContent = 'Error al calcular';
+        });
     }
 });
 </script>
