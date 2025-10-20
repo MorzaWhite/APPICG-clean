@@ -296,6 +296,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
      function resetWizard() {
+        // First, hide all step cards
+        const steps = itemWizard.querySelectorAll('.step-card');
+        steps.forEach(step => {
+            step.style.display = 'none';
+        });
+
+        // Then, reset the state and show the first step
         currentStep = 1;
         showStep(1);
         decorativeStones = [];
@@ -430,8 +437,33 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             summaryContainer.appendChild(summaryCard);
         });
-        // You'll need to re-implement the suggested date logic if you want to keep it.
-        // updateSuggestedDate();
+        updateSuggestedDate();
+    }
+
+    function updateSuggestedDate() {
+        const fechaSugeridaTexto = document.getElementById('fecha-sugerida-texto');
+        fechaSugeridaTexto.textContent = 'Calculando...';
+
+        fetch("{% url 'api_calcular_fecha_sugerida' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ items: items })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.fecha_sugerida) {
+                fechaSugeridaTexto.textContent = data.fecha_sugerida;
+            } else {
+                fechaSugeridaTexto.textContent = 'No se pudo calcular';
+            }
+        })
+        .catch(error => {
+            console.error('Error calculating suggested date:', error);
+            fechaSugeridaTexto.textContent = 'Error';
+        });
     }
 });
 </script>
