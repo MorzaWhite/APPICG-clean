@@ -18,10 +18,12 @@ from django.core.paginator import Paginator
 from django.utils.text import slugify
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from django.utils.decorators import method_decorator
 
 from .models import Orden, Item, FotoItem, ConfiguracionTiempos
 from .forms import OrdenForm, ManualDateForm
 from .business_hours import LOCAL_TZ, add_business_duration, subtract_business_duration
+from .decorators import retry_on_db_lock
 
 # Configurar logging
 logger = logging.getLogger(__name__)
@@ -264,55 +266,44 @@ class CrearOrdenView(View):
         context = self.get_context_data(form)
         return render(request, 'crear_orden.html', context)
     
+    @method_decorator(retry_on_db_lock())
     def post(self, request):
-
-
         form = OrdenForm(request.POST)
-
 
         if not form.is_valid():
             context = self.get_context_data(form)
             return render(request, 'crear_orden.html', context)
 
         try:
-            with transaction.atomic():
+            # Validar datos de ítems
+            validation_result = self._validar_items_data(request.POST)
+            if not validation_result['valido']:
+                messages.error(request, validation_result['error'])
+                context = self.get_context_data(form)
+                return render(request, 'crear_orden.html', context)
 
-                # Validar datos de ítems
-                validation_result = self._validar_items_data(request.POST)
+            # Extraer fecha de entrega manual
+            fecha_manual_str = request.POST.get('fecha_entrega_manual')
 
-                if not validation_result['valido']:
-                    messages.error(request, validation_result['error'])
-                    context = self.get_context_data(form)
-                    return render(request, 'crear_orden.html', context)
-                
-                # Extraer fecha de entrega manual
-                fecha_manual_str = request.POST.get('fecha_entrega_manual')
+            # Crear orden con ítems
+            orden = self._crear_orden_con_items(form, request.POST, fecha_manual_str)
 
-                # Crear orden con ítems
-                orden = self._crear_orden_con_items(form, request.POST, fecha_manual_str)
+            # Verificar que la orden se creó correctamente
+            if not orden or not orden.id:
+                raise Exception("La orden no se creó correctamente")
 
-                # Verificar que la orden se creó correctamente
-                if not orden or not orden.id:
-                    raise Exception("La orden no se creó correctamente")
+            # Verificar que se crearon ítems
+            if orden.items.count() == 0:
+                raise Exception("No se crearon ítems para la orden")
 
-                # Verificar que se crearon ítems
-                items_count = orden.items.count()
-
-                if items_count == 0:
-                    raise Exception("No se crearon ítems para la orden")
-
-                # Limpiar cache
-                cache.clear()
-
-                message = f"Orden {orden.numero_orden_facturacion} creada exitosamente con {items_count} ítems"
-                messages.success(request, message)
-
-                return redirect('orden_creada_exito', orden_id=orden.id)
+            # Limpiar cache y enviar mensaje de éxito
+            cache.clear()
+            messages.success(request, f"Orden {orden.numero_orden_facturacion} creada con {orden.items.count()} ítems.")
+            return redirect('orden_creada_exito', orden_id=orden.id)
 
         except ValidationError as e:
             messages.error(request, f"Error de validación: {str(e)}")
         except Exception as e:
-            import traceback
             messages.error(request, f"Error interno: {str(e)}. Contacta al administrador.")
 
         context = self.get_context_data(form)
@@ -742,6 +733,7 @@ class CrearOrdenView(View):
         }
 
 
+@retry_on_db_lock()
 def avanzar_etapa(request, orden_id):
     """Avanza una orden a la siguiente etapa con validaciones mejoradas"""
     if request.method != 'POST':
@@ -749,69 +741,41 @@ def avanzar_etapa(request, orden_id):
         return redirect('dashboard')
 
     try:
-        with transaction.atomic():
-            orden = get_object_or_404(
-                Orden.objects.select_for_update(),
-                id=orden_id
+        orden = get_object_or_404(Orden, id=orden_id)
+        etapa_anterior = orden.estado_actual
+        proxima_etapa = orden.get_proxima_etapa()
+
+        if not proxima_etapa:
+            messages.warning(request, f"La orden {orden.numero_orden_facturacion} ya está finalizada.")
+            return redirect('dashboard')
+
+        # Calcular tiempo a restar
+        tiempo_a_restar = 0
+        for item in orden.items.all():
+            item_type_key = 'JOYA'
+            if item.que_es == 'JOYA' and item.tipo_joya == 'SET':
+                item_type_key = 'SET'
+            elif item.que_es in ['PIEDRA', 'LOTE']:
+                item_type_key = item.que_es
+
+            duracion_etapa = TiempoCalculator.get_tiempo_estimado(
+                item_type_key, item.tipo_certificado, etapa_anterior
             )
-            
-            etapa_anterior = orden.estado_actual
-            proxima_etapa = orden.get_proxima_etapa()
+            tiempo_a_restar += duracion_etapa
 
-            if not proxima_etapa:
-                messages.warning(
-                    request,
-                    f"La orden {orden.numero_orden_facturacion} ya está finalizada"
-                )
-                return redirect('dashboard')
+        # Actualizar orden y fechas de ítems
+        if tiempo_a_restar > 0:
+            orden.items.update(fecha_limite_etapa=F('fecha_limite_etapa') - timedelta(seconds=tiempo_a_restar))
 
-            # Calcular tiempo total a restar de todos los ítems
-            tiempo_total_a_restar = 0
+        orden.estado_actual = proxima_etapa
+        if proxima_etapa == 'FINALIZADA':
+            orden.fecha_cierre = timezone.now()
+            orden.items.update(fecha_limite_etapa=None)
 
-            for item in orden.items.all():
-                # Determinar el tipo de ítem correctamente
-                if item.que_es == 'JOYA' and item.tipo_joya == 'SET':
-                    item_type_key = 'SET'
-                elif item.que_es == 'PIEDRA':
-                    item_type_key = 'PIEDRA'
-                elif item.que_es == 'LOTE':
-                    item_type_key = 'LOTE'
-                else:
-                    item_type_key = 'JOYA'
+        orden.save()
+        cache.clear()
 
-                duracion_etapa = TiempoCalculator.get_tiempo_estimado(
-                    item_type_key,
-                    item.tipo_certificado,
-                    etapa_anterior
-                )
-                tiempo_total_a_restar += duracion_etapa
-
-            # Actualizar fechas límite de todos los ítems
-            if tiempo_total_a_restar > 0:
-                tiempo_delta = timedelta(seconds=tiempo_total_a_restar)
-                orden.items.update(
-                    fecha_limite_etapa=F('fecha_limite_etapa') - tiempo_delta
-                )
-
-            # Avanzar la etapa
-            orden.estado_actual = proxima_etapa
-
-            # Si se finaliza, limpiar fechas límite
-            if proxima_etapa == 'FINALIZADA':
-                orden.fecha_cierre = timezone.now()
-                orden.items.update(fecha_limite_etapa=None)
-
-            orden.save()
-
-            # Limpiar cache relacionado (usando cache.clear() que sí existe)
-            cache.clear()
-
-            # Mensaje de éxito
-            messages.success(
-                request,
-                f"Orden {orden.numero_orden_facturacion} avanzó a {orden.get_estado_actual_display()}"
-            )
-
+        messages.success(request, f"Orden {orden.numero_orden_facturacion} avanzó a {orden.get_estado_actual_display()}.")
         return redirect('dashboard')
 
     except Exception as e:
@@ -819,101 +783,67 @@ def avanzar_etapa(request, orden_id):
         return redirect('dashboard')
 
 
+@retry_on_db_lock()
 def configuracion_tiempos(request):
     """Vista optimizada para configurar tiempos con validaciones mejoradas"""
     if request.method == 'POST':
         try:
-            with transaction.atomic():
-                cambios_realizados = 0
-                errores = []
+            cambios_realizados = 0
+            errores = []
+            configs = ConfiguracionTiempos.objects.all()
 
-                configs = ConfiguracionTiempos.objects.select_for_update()
+            for config in configs:
+                config_modificada = False
+                etapa_map = {
+                    'ingreso': 'tiempo_ingreso', 'foto': 'tiempo_fotografia',
+                    'revision': 'tiempo_revision', 'impresion': 'tiempo_impresion'
+                }
 
-                for config in configs:
-                    etapa_map = {
-                        'ingreso': 'tiempo_ingreso',
-                        'foto': 'tiempo_fotografia',
-                        'revision': 'tiempo_revision',
-                        'impresion': 'tiempo_impresion',
-                    }
+                for form_prefix, model_field in etapa_map.items():
+                    post_key = f'{form_prefix}_{config.tipo_item}_{config.tipo_certificado}'
+                    segundos_str = request.POST.get(post_key, '').strip()
 
-                    config_modificada = False
+                    try:
+                        segundos_value = int(segundos_str) if segundos_str else None
+                        if segundos_value is not None and (segundos_value < 0 or segundos_value > 2592000):
+                            raise ValueError("Valor fuera de rango")
 
-                    for form_prefix, model_field in etapa_map.items():
-                        post_key = f'{form_prefix}_{config.tipo_item}_{config.tipo_certificado}'
-                        segundos_str = request.POST.get(post_key, '').strip()
+                        if getattr(config, model_field) != segundos_value:
+                            setattr(config, model_field, segundos_value)
+                            config_modificada = True
+                    except (ValueError, TypeError):
+                        errores.append(f"Valor inválido para {config}: {form_prefix}")
 
-                        if segundos_str:
-                            try:
-                                segundos_value = int(segundos_str)
-                                if segundos_value < 0:
-                                    errores.append(f"Valor negativo no permitido para {config}: {form_prefix}")
-                                    continue
+                if config_modificada:
+                    try:
+                        config.full_clean()
+                        config.save()
+                        cambios_realizados += 1
+                    except ValidationError as e:
+                        errores.append(f"Error en {config}: {e}")
 
-                                if segundos_value > 2592000:  # 30 días
-                                    errores.append(f"Valor muy grande para {config}: {form_prefix} (máximo 30 días)")
-                                    continue
+            cache.clear()
 
-                                if getattr(config, model_field) != segundos_value:
-                                    setattr(config, model_field, segundos_value)
-                                    config_modificada = True
-
-                            except (ValueError, TypeError):
-                                errores.append(f"Valor inválido para {config}: {form_prefix}")
-                                continue
-                        else:
-                            # Campo vacío = None
-                            if getattr(config, model_field) is not None:
-                                setattr(config, model_field, None)
-                                config_modificada = True
-
-                    if config_modificada:
-                        try:
-                            config.full_clean()
-                            config.save()
-                            cambios_realizados += 1
-                        except ValidationError as e:
-                            errores.append(f"Error en {config}: {e}")
-
-                # Limpiar cache después de los cambios
-                cache.clear()
-
-                # Mostrar resultados
-                if errores:
-                    for error in errores[:5]:  # Mostrar máximo 5 errores
-                        messages.warning(request, error)
-
-                if cambios_realizados > 0:
-                    messages.success(
-                        request,
-                        f"Se actualizaron {cambios_realizados} configuraciones correctamente"
-                    )
-                    logger.info(f"Configuraciones actualizadas: {cambios_realizados}")
-                elif not errores:
-                    messages.info(request, "No se realizaron cambios")
+            if errores:
+                for error in errores[:5]: messages.warning(request, error)
+            if cambios_realizados > 0:
+                messages.success(request, f"Se actualizaron {cambios_realizados} configuraciones.")
+            elif not errores:
+                messages.info(request, "No se realizaron cambios.")
 
             return redirect('configuracion_tiempos')
 
         except Exception as e:
-            logger.error(f"Error al actualizar configuración de tiempos: {str(e)}")
-            messages.error(request, "Error interno al guardar configuración")
+            messages.error(request, "Error interno al guardar configuración.")
+            return redirect('configuracion_tiempos')
 
     # GET request
-    try:
-        configs_agrupadas = {}
-        for tipo_item_key, tipo_item_label in ConfiguracionTiempos.TIPO_ITEM_CHOICES:
-            configs_encontradas = ConfiguracionTiempos.objects.filter(
-                tipo_item=tipo_item_key
-            ).order_by('tipo_certificado')
-            configs_agrupadas[tipo_item_label] = configs_encontradas
+    configs_agrupadas = {}
+    for tipo_item_key, tipo_item_label in ConfiguracionTiempos.TIPO_ITEM_CHOICES:
+        configs_agrupadas[tipo_item_label] = ConfiguracionTiempos.objects.filter(tipo_item=tipo_item_key).order_by('tipo_certificado')
 
-        context = {'configs_agrupadas': configs_agrupadas}
-        return render(request, 'configuracion.html', context)
-
-    except Exception as e:
-        logger.error(f"Error al cargar configuración de tiempos: {str(e)}")
-        messages.error(request, "Error al cargar la configuración")
-        return render(request, 'configuracion.html', {'configs_agrupadas': {}})
+    context = {'configs_agrupadas': configs_agrupadas}
+    return render(request, 'configuracion.html', context)
 
 
 # --- VISTAS DE ETAPAS ---
@@ -922,17 +852,13 @@ def vista_por_etapa(request, etapa):
     """Vista mejorada por etapa con manejo optimizado"""
     try:
         etapa_upper = etapa.upper()
-
-        if etapa_upper not in dict(Orden.ETAPAS).keys():
+        if etapa_upper not in dict(Orden.ETAPAS):
             messages.error(request, "Etapa no válida")
             return redirect('dashboard')
 
-        # Obtener órdenes de la etapa con optimizaciones
         ordenes = Orden.objects.select_related().prefetch_related(
             'items__fotos'
-        ).filter(
-            estado_actual=etapa_upper
-        ).order_by('fecha_creacion')
+        ).filter(estado_actual=etapa_upper).order_by('fecha_creacion')
 
         context = {
             'ordenes': ordenes,
@@ -940,100 +866,76 @@ def vista_por_etapa(request, etapa):
             'etapa_key': etapa
         }
 
-        # Para la etapa de ingreso, cargar plantillas con cache
         if etapa_upper == 'INGRESO':
-            plantillas_cache_key = 'plantillas_disponibles'
-            plantillas_disponibles = cache.get(plantillas_cache_key)
-
+            plantillas_disponibles = cache.get('plantillas_disponibles')
             if plantillas_disponibles is None:
-                plantillas_disponibles = []
                 try:
-                    if hasattr(settings, 'PLANTILLAS_ROOT') and os.path.exists(settings.PLANTILLAS_ROOT):
-                        archivos = os.listdir(settings.PLANTILLAS_ROOT)
-                        plantillas_disponibles = sorted([
-                            f for f in archivos
-                            if f.lower().endswith('.xlsx') and not f.startswith('~')
-                        ])
-                        cache.set(plantillas_cache_key, plantillas_disponibles, CACHE_TIMEOUT)
-                except (FileNotFoundError, PermissionError, OSError) as e:
-                    logger.warning(f"Error al cargar plantillas: {str(e)}")
-                    messages.warning(request, "No se pudieron cargar las plantillas Excel")
-
-            context['plantillas_disponibles'] = plantillas_disponibles
+                    plantillas_path = getattr(settings, 'PLANTILLAS_ROOT', None)
+                    if plantillas_path and os.path.exists(plantillas_path):
+                        archivos = os.listdir(plantillas_path)
+                        plantillas_disponibles = sorted([f for f in archivos if f.lower().endswith('.xlsx') and not f.startswith('~')])
+                        cache.set('plantillas_disponibles', plantillas_disponibles, CACHE_TIMEOUT)
+                except Exception as e:
+                    logger.warning(f"Error al cargar plantillas: {e}")
+                    messages.warning(request, "No se pudieron cargar las plantillas Excel.")
+            context['plantillas_disponibles'] = plantillas_disponibles or []
 
         return render(request, 'vista_etapa.html', context)
 
     except Exception as e:
-        logger.error(f"Error en vista por etapa {etapa}: {str(e)}")
-        messages.error(request, "Error al cargar la vista de etapa")
+        logger.error(f"Error en vista por etapa {etapa}: {e}")
+        messages.error(request, "Error al cargar la vista de etapa.")
         return redirect('dashboard')
 
 
+@retry_on_db_lock()
 def asignar_excel(request, item_id):
     """Vista mejorada para asignar plantillas Excel con validaciones robustas"""
     if request.method != 'POST':
-        messages.error(request, "Método no permitido")
+        messages.error(request, "Método no permitido.")
         return redirect('vista_etapa', etapa='ingreso')
 
     try:
-        with transaction.atomic():
-            item = get_object_or_404(Item.objects.select_for_update(), id=item_id)
-            plantilla_nombre = request.POST.get('plantilla_seleccionada', '').strip()
+        item = get_object_or_404(Item, id=item_id)
+        plantilla_nombre = request.POST.get('plantilla_seleccionada', '').strip()
 
-            if not plantilla_nombre:
-                messages.error(request, "Debe seleccionar una plantilla")
-                return redirect('vista_etapa', etapa='ingreso')
+        if not plantilla_nombre:
+            messages.error(request, "Debe seleccionar una plantilla.")
+            return redirect('vista_etapa', etapa='ingreso')
 
-            # Validaciones de seguridad
-            if not hasattr(settings, 'PLANTILLAS_ROOT'):
-                messages.error(request, "Ruta de plantillas no configurada")
-                return redirect('vista_etapa', etapa='ingreso')
+        plantillas_root = getattr(settings, 'PLANTILLAS_ROOT', None)
+        if not plantillas_root or not (plantilla_nombre.endswith('.xlsx') and '..' not in plantilla_nombre):
+            messages.error(request, "Nombre de plantilla inválido o ruta no configurada.")
+            return redirect('vista_etapa', etapa='ingreso')
 
-            # Validar nombre de archivo (seguridad)
-            if not plantilla_nombre.endswith('.xlsx') or '..' in plantilla_nombre:
-                messages.error(request, "Nombre de plantilla inválido")
-                return redirect('vista_etapa', etapa='ingreso')
+        ruta_origen = os.path.join(plantillas_root, plantilla_nombre)
+        if not os.path.exists(ruta_origen):
+            messages.error(request, f"Plantilla no encontrada: {plantilla_nombre}")
+            return redirect('vista_etapa', etapa='ingreso')
 
-            ruta_origen = os.path.join(settings.PLANTILLAS_ROOT, plantilla_nombre)
+        # Crear carpetas y copiar archivo
+        nombre_carpeta_orden = f"ORDEN-{item.orden.id:04d}"
+        nombre_subcarpeta = f"ITEM-{item.numero_item}"
+        ruta_subcarpeta = os.path.join(settings.MEDIA_ROOT, nombre_carpeta_orden, nombre_subcarpeta)
+        os.makedirs(ruta_subcarpeta, exist_ok=True)
 
-            if not os.path.exists(ruta_origen):
-                messages.error(request, f"Plantilla {plantilla_nombre} no encontrada")
-                return redirect('vista_etapa', etapa='ingreso')
+        nombre_excel_destino = f"datos_item_{item.id}.xlsx"
+        ruta_destino = os.path.join(ruta_subcarpeta, nombre_excel_destino)
 
-            # Crear estructura de carpetas
-            nombre_carpeta_orden = f"ORDEN-{item.orden.id:04d}"
-            nombre_subcarpeta = f"ITEM-{item.numero_item}"
-            ruta_subcarpeta = os.path.join(
-                settings.MEDIA_ROOT,
-                nombre_carpeta_orden,
-                nombre_subcarpeta
-            )
+        shutil.copy2(ruta_origen, ruta_destino)
 
-            os.makedirs(ruta_subcarpeta, exist_ok=True)
+        # Actualizar item
+        item.nombre_excel = nombre_excel_destino
+        item.save(update_fields=['nombre_excel'])
 
-            # Generar nombre seguro para el archivo destino
-            nombre_excel_destino = f"datos_item_{item.id}.xlsx"
-            ruta_destino = os.path.join(ruta_subcarpeta, nombre_excel_destino)
-
-            # Copiar archivo de forma segura
-            shutil.copy2(ruta_origen, ruta_destino)
-
-            # Actualizar item
-            item.nombre_excel = nombre_excel_destino
-            item.save(update_fields=['nombre_excel'])
-
-            messages.success(
-                request,
-                f"Plantilla {plantilla_nombre} asignada correctamente al ítem {item.numero_item}"
-            )
-            logger.info(f"Plantilla asignada: {plantilla_nombre} -> Item {item.id}")
+        messages.success(request, f"Plantilla '{plantilla_nombre}' asignada al ítem {item.numero_item}.")
+        logger.info(f"Plantilla asignada: {plantilla_nombre} -> Item {item.id}")
 
     except PermissionError:
-        messages.error(request, "Sin permisos para copiar el archivo. Contacta al administrador.")
-        logger.error(f"PermissionError al asignar Excel al item {item_id}")
+        messages.error(request, "Sin permisos para copiar el archivo.")
     except Exception as e:
-        messages.error(request, "Error al asignar plantilla. Intente nuevamente.")
-        logger.error(f"Error al asignar Excel al item {item_id}: {str(e)}")
+        messages.error(request, "Error al asignar plantilla.")
+        logger.error(f"Error al asignar Excel al item {item.id}: {e}")
 
     return redirect('vista_etapa', etapa='ingreso')
 
@@ -1069,97 +971,72 @@ def detalle_orden(request, orden_id):
         return redirect('dashboard')
 
 
+@retry_on_db_lock()
 def _manejar_subida_qr(request, item, orden):
     """Maneja la subida de códigos QR con validaciones mejoradas"""
     try:
         qr_file = request.FILES.get('qr_code')
-
         if not qr_file:
-            messages.error(request, "No se seleccionó ningún archivo")
+            messages.error(request, "No se seleccionó ningún archivo.")
             return redirect('detalle_orden', orden_id=orden.id)
 
-        # Validar archivo
         es_valido, mensaje_error = FileManager.validar_archivo_imagen(qr_file, max_size_mb=5)
         if not es_valido:
             messages.error(request, mensaje_error)
             return redirect('detalle_orden', orden_id=orden.id)
 
-        with transaction.atomic():
-            # Eliminar QR anterior si existe
-            if item.qr_cargado:
-                try:
-                    if os.path.exists(item.qr_cargado.path):
-                        os.remove(item.qr_cargado.path)
-                        logger.info(f"QR anterior eliminado para item {item.id}")
-                except Exception as e:
-                    logger.warning(f"No se pudo eliminar QR anterior: {str(e)}")
+        # Eliminar QR anterior si existe
+        if item.qr_cargado and os.path.exists(item.qr_cargado.path):
+            os.remove(item.qr_cargado.path)
 
-            # Asignar nuevo QR con nombre seguro
-            qr_file.name = FileManager.safe_filename(qr_file.name)
-            item.qr_cargado = qr_file
-            item.save(update_fields=['qr_cargado'])
+        qr_file.name = FileManager.safe_filename(qr_file.name)
+        item.qr_cargado = qr_file
+        item.save(update_fields=['qr_cargado'])
 
-            messages.success(request, f"Código QR actualizado para el ítem {item.numero_item}")
-            logger.info(f"QR actualizado para item {item.id}")
-
+        messages.success(request, f"Código QR actualizado para el ítem {item.numero_item}.")
     except Exception as e:
-        logger.error(f"Error al subir QR para item {item.id}: {str(e)}")
-        messages.error(request, "Error al subir código QR. Intente nuevamente.")
+        logger.error(f"Error al subir QR para item {item.id}: {e}")
+        messages.error(request, "Error al subir código QR.")
 
     return redirect('detalle_orden', orden_id=orden.id)
 
 
+@retry_on_db_lock()
 def _manejar_subida_fotos(request, item, orden):
     """Maneja la subida de fotos profesionales con validaciones mejoradas"""
     try:
         fotos = request.FILES.getlist('fotos_profesionales')
-        
         if not fotos:
-            messages.error(request, "No se seleccionaron fotos")
+            messages.error(request, "No se seleccionaron fotos.")
             return redirect('detalle_orden', orden_id=orden.id)
 
-        if len(fotos) > 10:  # Límite de fotos por ítem
-            messages.error(request, "Máximo 10 fotos por ítem")
+        if len(fotos) > 10:
+            messages.error(request, "Máximo 10 fotos por ítem.")
             return redirect('detalle_orden', orden_id=orden.id)
 
         fotos_subidas = 0
         errores = []
 
-        with transaction.atomic():
-            for foto in fotos:
-                try:
-                    # Validar cada foto
-                    es_valido, mensaje_error = FileManager.validar_archivo_imagen(foto, max_size_mb=10)
-                    if not es_valido:
-                        errores.append(f"{foto.name}: {mensaje_error}")
-                        continue
+        for foto in fotos:
+            es_valido, mensaje_error = FileManager.validar_archivo_imagen(foto, max_size_mb=10)
+            if not es_valido:
+                errores.append(f"{foto.name}: {mensaje_error}")
+                continue
 
-                    # Generar nombre seguro
-                    foto.name = FileManager.safe_filename(foto.name)
+            foto.name = FileManager.safe_filename(foto.name)
+            FotoItem.objects.create(item=item, imagen=foto)
+            fotos_subidas += 1
 
-                    # Crear FotoItem
-                    FotoItem.objects.create(item=item, imagen=foto)
-                    fotos_subidas += 1
-
-                except Exception as e:
-                    errores.append(f"{foto.name}: Error al procesar")
-                    logger.error(f"Error al procesar foto {foto.name} para item {item.id}: {str(e)}")
-
-        # Mostrar resultados
         if fotos_subidas > 0:
-            messages.success(request, f"Se subieron {fotos_subidas} fotos correctamente")
-            logger.info(f"{fotos_subidas} fotos subidas para item {item.id}")
-
+            messages.success(request, f"Se subieron {fotos_subidas} fotos.")
         if errores:
-            for error in errores[:3]:  # Mostrar máximo 3 errores
-                messages.warning(request, error)
-
-        if fotos_subidas == 0:
-            messages.error(request, "No se pudo subir ninguna foto")
+            for error in errores[:3]: messages.warning(request, error)
+        if fotos_subidas == 0 and not errores:
+            messages.error(request, "No se pudo subir ninguna foto.")
 
     except Exception as e:
-        logger.error(f"Error general al subir fotos para item {item.id}: {str(e)}")
-        messages.error(request, "Error al subir fotos. Intente nuevamente.")
+        logger.error(f"Error al subir fotos para item {item.id}: {e}")
+        messages.error(request, "Error al subir fotos.")
 
     return redirect('detalle_orden', orden_id=orden.id)
 
@@ -1279,6 +1156,7 @@ def api_orden_status(request, orden_id):
         logger.error(f"Error en API orden status {orden_id}: {str(e)}")
         return JsonResponse({'error': 'Error interno'}, status=500)
 
+@retry_on_db_lock()
 def set_manual_date(request, orden_id):
     if request.method == 'POST':
         orden = get_object_or_404(Orden, id=orden_id)
@@ -1289,34 +1167,32 @@ def set_manual_date(request, orden_id):
 
             if not items:
                 messages.error(request, 'La orden no tiene ítems para actualizar.')
-                return redirect('dashboard')
+                return redirect('detalle_orden', orden_id=orden_id)
 
             # Recalcular fechas hacia atrás
-            with transaction.atomic():
-                fecha_siguiente_item = manual_date
+            fecha_siguiente_item = manual_date
+            for item in reversed(items):
+                item.fecha_limite_etapa = fecha_siguiente_item
+                item.save(update_fields=['fecha_limite_etapa'])
 
-                for item in reversed(items):
-                    item.fecha_limite_etapa = fecha_siguiente_item
-                    item.save(update_fields=['fecha_limite_etapa'])
+                # Preparar la fecha para el item anterior
+                item_type_key = 'JOYA'
+                if item.que_es == 'JOYA' and item.tipo_joya == 'SET':
+                    item_type_key = 'SET'
+                elif item.que_es in ['PIEDRA', 'LOTE']:
+                    item_type_key = item.que_es
 
-                    # Preparar la fecha para el item anterior
-                    item_type_key = 'JOYA'
-                    if item.que_es == 'JOYA' and item.tipo_joya == 'SET':
-                        item_type_key = 'SET'
-                    elif item.que_es in ['PIEDRA', 'LOTE']:
-                        item_type_key = item.que_es
+                duracion_segundos = TiempoCalculator.calcular_duracion_total_item(
+                    item_type_key, item.tipo_certificado
+                )
+                duracion = timedelta(seconds=duracion_segundos)
+                fecha_siguiente_item = subtract_business_duration(fecha_siguiente_item, duracion)
 
-                    duracion_segundos = TiempoCalculator.calcular_duracion_total_item(
-                        item_type_key, item.tipo_certificado
-                    )
-                    duracion = timedelta(seconds=duracion_segundos)
-                    fecha_siguiente_item = subtract_business_duration(fecha_siguiente_item, duracion)
-
-            messages.success(request, 'Fecha de entrega actualizada y recalculada para todos los ítems.')
-            return redirect('detalle_orden', orden_id=orden_id)
+            messages.success(request, 'Fecha de entrega actualizada y recalculada.')
         else:
-            messages.error(request, 'Por favor, introduce una fecha y hora válidas.')
-            return redirect('detalle_orden', orden_id=orden_id)
+            messages.error(request, 'Fecha y hora no válidas.')
+
+        return redirect('detalle_orden', orden_id=orden_id)
 
     return redirect('dashboard')
 

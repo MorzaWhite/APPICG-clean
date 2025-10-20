@@ -250,11 +250,6 @@
 {% block page_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    {% if messages %}
-        const errorToast = new bootstrap.Toast(document.getElementById('error-toast'));
-        errorToast.show();
-    {% endif %}
-
     $('#tags').select2();
 
     let currentStep = 1;

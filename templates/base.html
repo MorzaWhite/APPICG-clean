@@ -36,27 +36,34 @@
     {% block page_scripts %}{% endblock %}
 
     <!-- Toast Container -->
-    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
-        <!-- Success Toast -->
-        <div id="success-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header bg-success text-white">
-                <strong class="me-auto">Éxito</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+                <div class="toast-header {% if message.tags == 'success' %}bg-success text-white{% elif message.tags == 'error' %}bg-danger text-white{% else %}bg-secondary text-white{% endif %}">
+                    <strong class="me-auto">
+                        {% if message.tags == 'success' %}Éxito
+                        {% elif message.tags == 'error' %}Error
+                        {% else %}Notificación
+                        {% endif %}
+                    </strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    {{ message }}
+                </div>
             </div>
-            <div class="toast-body">
-                El ítem ha sido añadido correctamente.
-            </div>
-        </div>
-        <!-- Error Toast -->
-        <div id="error-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header bg-danger text-white">
-                <strong class="me-auto">Error</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                Ha ocurrido un error. Por favor, intente de nuevo.
-            </div>
-        </div>
+            {% endfor %}
+        {% endif %}
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+        var toastList = toastElList.map(function (toastEl) {
+            return new bootstrap.Toast(toastEl).show();
+        });
+    });
+    </script>
 </body>
 </html>
