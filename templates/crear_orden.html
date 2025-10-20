@@ -116,7 +116,7 @@
 
                     <!-- Step 3: Type of Jewel -->
                     <div class="step-card" id="step-3" style="display: none;">
-                        <h5 class="text-center">Paso 3: Tipo de Joya</h5>
+                         <h5 class="text-center">Paso 3: Tipo de Joya</h5>
                         <div class="mb-3">
                             <label class="form-label">Tipo de Joya</label>
                             <select name="tipo_joya" class="form-select tipo-joya-select" id="tipo_joya_modal">
@@ -128,51 +128,31 @@
                                 <option value="SET">Set</option>
                             </select>
                         </div>
-                        <div class="d-flex justify-content-between">
+                         <div class="d-flex justify-content-between">
                             <button type="button" class="btn btn-light prev-step">Anterior</button>
                             <button type="button" class="btn btn-primary next-step">Siguiente</button>
                         </div>
                     </div>
 
-                    <!-- Step 4: Set Components -->
+                    <!-- Step 4: Main Gemstone -->
                     <div class="step-card" id="step-4" style="display: none;">
-                        <h5 class="text-center">Paso 4: Componentes del Set</h5>
+                        <h5 class="text-center">Paso 4: Gema Principal</h5>
                         <div class="mb-3">
-                            <label class="form-label">Componentes</label>
-                            <input type="text" name="componentes_set" class="form-control" id="componentes_set_modal" placeholder="Ej: Anillo, Aretes, Dije">
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-light prev-step">Anterior</button>
-                            <button type="button" class="btn btn-primary next-step">Siguiente</button>
-                        </div>
-                    </div>
-
-                    <!-- Step 5: Main Gemstone or Reference Code -->
-                    <div class="step-card" id="step-5" style="display: none;">
-                        <!-- Gema Principal -->
-                        <div class="mb-3" id="gema-principal-group">
-                            <h5 class="text-center">Paso 5: Gema Principal</h5>
                             <label class="form-label">Gema Principal</label>
                             <select name="gema_principal" class="form-select gema-select" id="gema_principal_modal">
                                 {% for gema in gemas_principales %}<option value="{{ gema }}">{{ gema }}</option>{% endfor %}
                             </select>
                         </div>
-                        <!-- Código de Referencia -->
-                        <div class="mb-3" id="codigo-referencia-group" style="display: none;">
-                            <h5 class="text-center">Paso 5: Código de Referencia</h5>
-                            <label class="form-label">Código de Referencia</label>
-                            <input type="text" name="codigo_referencia" class="form-control" id="codigo_referencia_modal" placeholder="Ej: 12345-C">
-                        </div>
                         <div class="d-flex justify-content-between">
                             <button type="button" class="btn btn-light prev-step">Anterior</button>
                             <button type="button" class="btn btn-primary next-step">Siguiente</button>
                         </div>
                     </div>
 
-                    <!-- Step 6: Quantity -->
-                    <div class="step-card" id="step-6" style="display: none;">
-                        <h5 class="text-center">Paso 6: Cantidad</h5>
-                        <div class="mb-3">
+                    <!-- Step 5: Quantity -->
+                    <div class="step-card" id="step-5" style="display: none;">
+                        <h5 class="text-center">Paso 5: Cantidad</h5>
+                         <div class="mb-3">
                             <label class="form-label">Número de Gemas</label>
                             <input type="number" name="cantidad_gemas_varios" class="form-control" placeholder="Cantidad..." id="cantidad_gemas_modal">
                         </div>
@@ -182,9 +162,9 @@
                         </div>
                     </div>
 
-                    <!-- Step 7: Details -->
-                    <div class="step-card" id="step-7" style="display: none;">
-                        <h5 class="text-center">Paso 7: Detalles Finales</h5>
+                    <!-- Step 6: Details -->
+                    <div class="step-card" id="step-6" style="display: none;">
+                        <h5 class="text-center">Paso 6: Detalles Finales</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Metal</label>
@@ -214,6 +194,13 @@
                             <textarea name="comentarios" class="form-control" rows="1" id="comentarios_modal"></textarea>
                         </div>
 
+                        <!-- Decorative Stones -->
+                        <div class="mt-4">
+                            <h6>Piedras Decorativas</h6>
+                            <div id="decorative-stones-container"></div>
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#addDecorativeStoneModal">Añadir Piedra Decorativa</button>
+                        </div>
+
                         <div class="mt-4 d-flex justify-content-between">
                             <button type="button" class="btn btn-light prev-step">Anterior</button>
                             <button type="button" class="btn btn-success" id="add-item-to-order">Añadir Ítem a la Orden</button>
@@ -224,43 +211,69 @@
         </div>
     </div>
 </div>
+
+<!-- Add Decorative Stone Modal -->
+<div class="modal fade" id="addDecorativeStoneModal" tabindex="-1" aria-labelledby="addDecorativeStoneModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDecorativeStoneModalLabel">Añadir Piedra Decorativa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="stone-type" class="form-label">Tipo de Piedra</label>
+                    <input type="text" class="form-control" id="stone-type">
+                </div>
+                <div class="mb-3">
+                    <label for="stone-weight" class="form-label">Peso (cts)</label>
+                    <input type="number" class="form-control" id="stone-weight">
+                </div>
+                <div class="mb-3">
+                    <label for="stone-quantity" class="form-label">Cantidad</label>
+                    <input type="number" class="form-control" id="stone-quantity">
+                </div>
+                <div class="mb-3">
+                    <label for="stone-color" class="form-label">Color (opcional)</label>
+                    <input type="text" class="form-control" id="stone-color">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="save-decorative-stone">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block page_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    {% if messages %}
+        const errorToast = new bootstrap.Toast(document.getElementById('error-toast'));
+        errorToast.show();
+    {% endif %}
+
     $('#tags').select2();
 
     let currentStep = 1;
-    const itemWizard = document.getElementById('item-wizard');
-    const totalSteps = itemWizard.querySelectorAll('.step-card').length;
+    const totalSteps = 6;
     const progressBar = document.getElementById('progress-bar');
+    const itemWizard = document.getElementById('item-wizard');
     let items = [];
+    let decorativeStones = [];
 
     function showStep(stepNumber) {
         const steps = itemWizard.querySelectorAll('.step-card');
-        steps.forEach(step => step.style.display = 'none');
-
+        steps.forEach(step => {
+            step.style.display = 'none';
+        });
         const nextStep = itemWizard.querySelector(`#step-${stepNumber}`);
         if (nextStep) {
             nextStep.style.display = 'block';
             updateProgressBar(stepNumber);
             currentStep = stepNumber;
-        }
-
-        // Handle conditional fields for step 4
-        if (stepNumber === 4) {
-            const queEs = document.getElementById('que_es_modal').value;
-            const gemaGroup = document.getElementById('gema-principal-group');
-            const codigoGroup = document.getElementById('codigo-referencia-group');
-
-            if (queEs === 'VERBAL_A_GC' || queEs === 'REIMPRESION') {
-                gemaGroup.style.display = 'none';
-                codigoGroup.style.display = 'block';
-            } else {
-                gemaGroup.style.display = 'block';
-                codigoGroup.style.display = 'none';
-            }
         }
     }
 
@@ -271,59 +284,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function nextStep() {
-        let next = currentStep + 1;
-        const queEs = document.getElementById('que_es_modal').value;
-
-        // Skip jewelry-related steps for non-jewelry items
-        if (currentStep === 2 && (queEs === 'PIEDRA' || queEs === 'LOTE' || queEs === 'VERBAL_A_GC' || queEs === 'REIMPRESION')) {
-            next = 5; // Skip to quantity
-        } else if (currentStep === 3 && document.getElementById('tipo_joya_modal').value !== 'SET') {
-            next = 5; // Skip to quantity
-        }
-
-        if (next <= totalSteps) {
-            showStep(next);
+        if (currentStep < totalSteps) {
+            showStep(currentStep + 1);
         }
     }
 
     function prevStep() {
-        let prev = currentStep - 1;
-        const queEs = document.getElementById('que_es_modal').value;
-
-        // Skip jewelry-related steps for non-jewelry items
-        if (currentStep === 5 && (queEs === 'PIEDRA' || queEs === 'LOTE' || queEs === 'VERBAL_A_GC' || queEs === 'REIMPRESION')) {
-            prev = 2;
-        } else if (currentStep === 5 && document.getElementById('tipo_joya_modal').value !== 'SET') {
-            prev = 3;
-        }
-
-        if (prev >= 1) {
-            showStep(prev);
+        if (currentStep > 1) {
+            showStep(currentStep - 1);
         }
     }
 
-    function resetWizard() {
-        currentStep = 1; // Explicitly set currentStep back to 1
-        showStep(1); // Show the first step
-
+     function resetWizard() {
+        currentStep = 1;
+        showStep(1);
+        decorativeStones = [];
         const modal = document.getElementById('addItemModal');
-
-        // Reset all form elements within the modal
-        const formElements = modal.querySelectorAll('input, select, textarea');
-        formElements.forEach(el => {
-            const tagName = el.tagName.toLowerCase();
-            if (tagName === 'select') {
-                el.selectedIndex = 0; // Reset to the first option
-            } else if (el.type === 'checkbox' || el.type === 'radio') {
-                el.checked = false; // Uncheck
+        modal.querySelectorAll('input, select, textarea').forEach(el => {
+            if (el.type === 'radio' || el.type === 'checkbox') {
+                el.checked = false;
+            } else if (el.multiple) {
+                Array.from(el.options).forEach(opt => opt.selected = false);
             } else {
-                el.value = ''; // Clear value for text, number, textarea, etc.
+                el.value = '';
             }
         });
-
-        // Ensure conditional fields are hidden correctly
-        document.getElementById('gema-principal-group').style.display = 'block';
-        document.getElementById('codigo-referencia-group').style.display = 'none';
+        renderDecorativeStones();
     }
 
     itemWizard.addEventListener('click', function(e) {
@@ -335,41 +321,69 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    const decorativeStoneModalEl = document.getElementById('addDecorativeStoneModal');
+    const decorativeStoneModal = new bootstrap.Modal(decorativeStoneModalEl);
+
+    document.getElementById('save-decorative-stone').addEventListener('click', function() {
+        const stone = {
+            tipo_piedra: document.getElementById('stone-type').value,
+            peso: document.getElementById('stone-weight').value,
+            cantidad: document.getElementById('stone-quantity').value,
+            color: document.getElementById('stone-color').value,
+        };
+        decorativeStones.push(stone);
+        renderDecorativeStones();
+
+        document.getElementById('stone-type').value = '';
+        document.getElementById('stone-weight').value = '';
+        document.getElementById('stone-quantity').value = '';
+        document.getElementById('stone-color').value = '';
+
+        decorativeStoneModal.hide();
+    });
+
+    function renderDecorativeStones() {
+        const container = document.getElementById('decorative-stones-container');
+        container.innerHTML = '';
+        decorativeStones.forEach((stone, index) => {
+            const stoneEl = document.createElement('div');
+            stoneEl.className = 'd-flex justify-content-between align-items-center mb-2';
+            stoneEl.innerHTML = `
+                <span>${stone.cantidad} x ${stone.tipo_piedra} (${stone.peso} cts)</span>
+                <button type="button" class="btn btn-sm btn-danger remove-stone" data-index="${index}">Eliminar</button>
+            `;
+            container.appendChild(stoneEl);
+        });
+    }
+
+    document.getElementById('decorative-stones-container').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-stone')) {
+            const index = e.target.dataset.index;
+            decorativeStones.splice(index, 1);
+            renderDecorativeStones();
+        }
+    });
+
     const mainModalEl = document.getElementById('addItemModal');
     const mainModal = new bootstrap.Modal(mainModalEl);
 
     document.getElementById('add-item-to-order').addEventListener('click', function() {
-        try {
-            const itemData = {
-                tipo_certificado: document.getElementById('tipo_certificado_modal').value,
-                que_es: document.getElementById('que_es_modal').value,
-                tipo_joya: document.getElementById('tipo_joya_modal').value,
-                gema_principal: Array.from(document.getElementById('gema_principal_modal').selectedOptions).map(o => o.value).join(','),
-                codigo_referencia: document.getElementById('codigo_referencia_modal').value,
-                componentes_set: document.getElementById('componentes_set_modal').value,
-                cantidad_gemas: document.getElementById('cantidad_gemas_modal').value,
-                metal: document.getElementById('metal_modal').value,
-                forma_gema: document.getElementById('forma_gema_modal').value,
-                peso_gema: document.getElementById('peso_gema_modal').value,
-                comentarios: document.getElementById('comentarios_modal').value,
-            };
-            items.push(itemData);
-            updateForm();
+        const itemData = {
+            tipo_certificado: document.getElementById('tipo_certificado_modal').value,
+            que_es: document.getElementById('que_es_modal').value,
+            tipo_joya: document.getElementById('tipo_joya_modal').value,
+            gema_principal: Array.from(document.getElementById('gema_principal_modal').selectedOptions).map(o => o.value).join(','),
+            cantidad_gemas: document.getElementById('cantidad_gemas_modal').value,
+            metal: document.getElementById('metal_modal').value,
+            forma_gema: document.getElementById('forma_gema_modal').value,
+            peso_gema: document.getElementById('peso_gema_modal').value,
+            comentarios: document.getElementById('comentarios_modal').value,
+            piedras_decorativas: decorativeStones,
+        };
+        items.push(itemData);
+        updateForm();
 
-            // Show success toast
-            const successToast = new bootstrap.Toast(document.getElementById('success-toast'));
-            successToast.show();
-
-            // Hide the modal after a short delay to allow the toast to be seen
-            setTimeout(() => {
-                mainModal.hide();
-            }, 500);
-
-        } catch (error) {
-            // Show error toast
-            const errorToast = new bootstrap.Toast(document.getElementById('error-toast'));
-            errorToast.show();
-        }
+        mainModal.hide();
     });
 
     mainModalEl.addEventListener('hidden.bs.modal', function (event) {
@@ -416,33 +430,8 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             summaryContainer.appendChild(summaryCard);
         });
-        updateSuggestedDate();
-    }
-
-    function updateSuggestedDate() {
-        const fechaSugeridaTexto = document.getElementById('fecha-sugerida-texto');
-        fechaSugeridaTexto.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculando...';
-
-        fetch("{% url 'api_calcular_fecha_sugerida' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({ items: items })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.fecha_sugerida) {
-                fechaSugeridaTexto.textContent = data.fecha_sugerida;
-            } else {
-                fechaSugeridaTexto.textContent = 'No disponible';
-            }
-        })
-        .catch(error => {
-            console.error('Error calculating suggested date:', error);
-            fechaSugeridaTexto.textContent = 'Error al calcular';
-        });
+        // You'll need to re-implement the suggested date logic if you want to keep it.
+        // updateSuggestedDate();
     }
 });
 </script>

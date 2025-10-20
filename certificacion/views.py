@@ -320,39 +320,30 @@ class CrearOrdenView(View):
 
     def _validar_items_data(self, post_data):
         """Valida los datos de los ítems antes de crear la orden"""
-        item_fields = [
-            'tipo_certificado', 'que_es', 'tipo_joya', 'gema_principal',
-            'codigo_referencia', 'componentes_set', 'cantidad_gemas',
-            'metal', 'forma_gema', 'peso_gema', 'comentarios'
-        ]
+        item_index = 0
+        while True:
+            prefix = f'item-{item_index}-'
+            if f'{prefix}tipo_certificado' not in post_data:
+                break
 
-        # Check that all lists have the same length
-        list_lengths = {field: len(post_data.getlist(field)) for field in item_fields}
-
-        if not list_lengths['tipo_certificado']:
-            return {'valido': False, 'error': 'Debe agregar al menos un ítem'}
-
-        if len(set(list_lengths.values())) > 1:
-            return {'valido': False, 'error': 'Error en datos de ítems: listas con longitudes diferentes'}
-
-        num_items = list_lengths['tipo_certificado']
-        if num_items > MAX_ITEMS_PER_ORDER:
-            return {'valido': False, 'error': f'Máximo {MAX_ITEMS_PER_ORDER} ítems por orden'}
-
-        for i in range(num_items):
-            tipo_cert = post_data.getlist('tipo_certificado')[i]
-            que_es = post_data.getlist('que_es')[i]
-            gema_ppal = post_data.getlist('gema_principal')[i]
-            codigo_ref = post_data.getlist('codigo_referencia')[i]
+            tipo_cert = post_data.get(f'{prefix}tipo_certificado')
+            que_es = post_data.get(f'{prefix}que_es')
+            gema_principal = post_data.get(f'{prefix}gema_principal')
+            codigo_referencia = post_data.get(f'{prefix}codigo_referencia')
 
             if not tipo_cert or not tipo_cert.strip():
-                return {'valido': False, 'error': f'El ítem {i+1} debe tener tipo de certificado'}
+                return {'valido': False, 'error': f'El ítem {item_index + 1} debe tener tipo de certificado'}
             if not que_es or not que_es.strip():
-                return {'valido': False, 'error': f'El ítem {i+1} debe tener definido "qué es"'}
-            if que_es in ['VERBAL_A_GC', 'REIMPRESION'] and (not codigo_ref or not codigo_ref.strip()):
-                return {'valido': False, 'error': f'El ítem {i+1} requiere código de referencia'}
-            if que_es not in ['VERBAL_A_GC', 'REIMPRESION'] and (not gema_ppal or not gema_ppal.strip()):
-                return {'valido': False, 'error': f'El ítem {i+1} requiere gema principal'}
+                return {'valido': False, 'error': f'El ítem {item_index + 1} debe tener definido "qué es"'}
+            if que_es in ['VERBAL_A_GC', 'REIMPRESION'] and (not codigo_referencia or not codigo_referencia.strip()):
+                return {'valido': False, 'error': f'El ítem {item_index + 1} requiere código de referencia'}
+            if que_es not in ['VERBAL_A_GC', 'REIMPRESION'] and (not gema_principal or not gema_principal.strip()):
+                return {'valido': False, 'error': f'El ítem {item_index + 1} requiere gema principal'}
+
+            item_index += 1
+
+        if item_index == 0:
+            return {'valido': False, 'error': 'Debe agregar al menos un ítem'}
 
         return {'valido': True, 'error': ''}
 
@@ -426,25 +417,31 @@ class CrearOrdenView(View):
         return orden
 
     def _extraer_items_completos(self, post_data):
-        """Extrae todos los datos del formulario incluyendo cantidades y componentes"""
+        """Extrae datos de ítems del POST, buscando prefijos 'item-N-'."""
         items_data = []
-        item_fields = [
-            'tipo_certificado', 'que_es', 'tipo_joya', 'gema_principal',
-            'codigo_referencia', 'componentes_set', 'cantidad_gemas',
-            'metal', 'forma_gema', 'peso_gema', 'comentarios'
-        ]
-        
-        # Ensure all lists have the same length to prevent IndexError
-        list_lengths = {field: len(post_data.getlist(field)) for field in item_fields}
-        if len(set(list_lengths.values())) > 1:
-            return [] # Return empty list if data is inconsistent
+        item_index = 0
+        while True:
+            prefix = f'item-{item_index}-'
+            if f'{prefix}tipo_certificado' not in post_data:
+                break
 
-        num_items = list_lengths['tipo_certificado']
-        for i in range(num_items):
-            item_data = {field: post_data.getlist(field)[i] for field in item_fields}
-            item_data['cantidad_info'] = self._extraer_cantidad_info(post_data, i + 1, item_data['tipo_certificado'])
+            cantidad_gemas_str = post_data.get(f'{prefix}cantidad_gemas', '1')
+            item_data = {
+                'tipo_certificado': post_data.get(f'{prefix}tipo_certificado', ''),
+                'que_es': post_data.get(f'{prefix}que_es', ''),
+                'tipo_joya': post_data.get(f'{prefix}tipo_joya', ''),
+                'gema_principal': post_data.get(f'{prefix}gema_principal', ''),
+                'codigo_referencia': post_data.get(f'{prefix}codigo_referencia', ''),
+                'componentes_set': post_data.get(f'{prefix}componentes_set', ''),
+                'cantidad_gemas': cantidad_gemas_str,
+                'metal': post_data.get(f'{prefix}metal', ''),
+                'forma_gema': post_data.get(f'{prefix}forma_gema', ''),
+                'peso_gema': post_data.get(f'{prefix}peso_gema', ''),
+                'comentarios': post_data.get(f'{prefix}comentarios', ''),
+                'cantidad_info': {'tipo': 'varios', 'valor': cantidad_gemas_str, 'detalle': f"{cantidad_gemas_str} gemas"}
+            }
             items_data.append(item_data)
-
+            item_index += 1
         return items_data
 
     def _extraer_cantidad_info(self, post_data, item_index, tipo_cert):
