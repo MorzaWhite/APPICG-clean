@@ -1,0 +1,133 @@
+{
+	"info": {
+		"_postman_id": "a8c2f1f1-8e5e-4b9a-b4f0-4d8e5b0e1b3a",
+		"name": "SGICG API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Calculate Suggested Delivery Date",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "X-CSRFToken",
+						"value": "{{csrftoken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"items\": [\n        { \"tipo\": \"tipo_gema\", \"cantidad\": 1 },\n        { \"tipo\": \"tipo_joya\", \"cantidad\": 2 }\n    ]\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/calcular_fecha_sugerida/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"calcular_fecha_sugerida",
+						""
+					]
+				},
+				"description": "Calculates the suggested delivery date for an order based on the items it contains."
+			},
+			"response": []
+		},
+		{
+			"name": "Check Order Number",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/check_order_number/?numero_orden=12345",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"check_order_number",
+						""
+					],
+					"query": [
+						{
+							"key": "numero_orden",
+							"value": "12345"
+						}
+					]
+				},
+				"description": "Checks if a given order number already exists in the database."
+			},
+			"response": []
+		},
+		{
+			"name": "Create Order",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-CSRFToken",
+						"value": "{{csrftoken}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "numero_orden",
+							"value": "98765",
+							"type": "text"
+						},
+						{
+							"key": "cliente",
+							"value": "Test Client",
+							"type": "text"
+						},
+						{
+							"key": "item-0-tipo_item",
+							"value": "gema",
+							"type": "text"
+						},
+						{
+							"key": "item-0-descripcion",
+							"value": "Diamond",
+							"type": "text"
+						},
+						{
+							"key": "item-0-peso_quilates",
+							"value": "1.5",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/orden/crear/",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"orden",
+						"crear",
+						""
+					]
+				},
+				"description": "Creates a new certification order."
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000"
+		},
+		{
+			"key": "csrftoken",
+			"value": ""
+		}
+	]
+}

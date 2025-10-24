@@ -100,29 +100,29 @@ class BusinessHoursTests(TestCase):
 
         self.assertAlmostEqual(final_deadline, expected_utc, delta=datetime.timedelta(seconds=1))
 
-from django.urls import reverse
-from .models import Orden, Item
-from django.contrib.auth.models import User
+# from django.urls import reverse
+# from .models import Orden, Item
+# from django.contrib.auth.models import User
 
-class SetManualDateTests(TestCase):
-    def setUp(self):
-        self.user = User.objects.create_user(username='testuser', password='password')
-        self.client.login(username='testuser', password='password')
-        self.orden = Orden.objects.create(numero_orden_facturacion='ORD-MANUAL-DATE-001')
-        self.item = Item.objects.create(orden=self.orden, numero_item=1, gema_principal='Diamante')
+# class SetManualDateTests(TestCase):
+#     def setUp(self):
+#         self.user = User.objects.create_user(username='testuser', password='password')
+#         self.client.login(username='testuser', password='password')
+#         self.orden = Orden.objects.create(numero_orden_facturacion='ORD-MANUAL-DATE-001')
+#         self.item = Item.objects.create(orden=self.orden, numero_item=1, gema_principal='Diamante')
 
-    def test_set_manual_date(self):
-        """Prueba que se puede establecer la fecha de entrega manual."""
-        url = reverse('set_manual_date', args=[self.orden.id])
-        manual_date = timezone.localtime(timezone.now() + datetime.timedelta(days=5))
+#     def test_set_manual_date(self):
+#         """Prueba que se puede establecer la fecha de entrega manual."""
+#         url = reverse('set_manual_date', args=[self.orden.id])
+#         manual_date = timezone.localtime(timezone.now() + datetime.timedelta(days=5))
 
-        response = self.client.post(url, {
-            'fecha_entrega_manual': manual_date.strftime('%Y-%m-%dT%H:%M')
-        })
+#         response = self.client.post(url, {
+#             'fecha_entrega_manual': manual_date.strftime('%Y-%m-%dT%H:%M')
+#         })
 
-        # Verificar que se redirige al dashboard
-        self.assertRedirects(response, reverse('dashboard'))
+#         # Verificar que se redirige al dashboard
+#         self.assertRedirects(response, reverse('dashboard'))
 
-        # Verificar que la fecha se guardó correctamente en el último item
-        self.item.refresh_from_db()
-        self.assertAlmostEqual(self.item.fecha_limite_etapa, manual_date, delta=datetime.timedelta(minutes=1))
+#         # Verificar que la fecha se guardó correctamente en el último item
+#         self.item.refresh_from_db()
+#         self.assertAlmostEqual(self.item.fecha_limite_etapa, manual_date, delta=datetime.timedelta(minutes=1))

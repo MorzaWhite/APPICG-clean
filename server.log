@@ -1,0 +1,474 @@
+Watching for file changes with StatReloader
+Error: That port is already in use.
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:34:22
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:34:32
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:34:49
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:34:59
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:35:22
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:35:29
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+[18/Oct/2025 20:35:40] "GET /orden/nueva/ HTTP/1.1" 200 27589
+[18/Oct/2025 20:35:40] "GET /static/css/custom.css HTTP/1.1" 200 584
+[18/Oct/2025 20:35:40] "GET /static/js/countdown.js HTTP/1.1" 200 1475
+[18/Oct/2025 20:35:40] "GET /static/css/style.css HTTP/1.1" 200 122
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:35:36
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:36:00
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:36:20
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:36:28
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+[18/Oct/2025 20:36:38] "GET /orden/nueva/ HTTP/1.1" 200 27589
+[18/Oct/2025 20:36:38] "GET /static/js/countdown.js HTTP/1.1" 200 1475
+[18/Oct/2025 20:36:38] "GET /static/css/custom.css HTTP/1.1" 200 584
+[18/Oct/2025 20:36:38] "GET /static/css/style.css HTTP/1.1" 200 122
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:36:35
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:36:59
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:37:20
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:37:27
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+[18/Oct/2025 20:37:36] "GET /orden/nueva/ HTTP/1.1" 200 27589
+[18/Oct/2025 20:37:36] "GET /static/js/countdown.js HTTP/1.1" 200 1475
+[18/Oct/2025 20:37:36] "GET /static/css/custom.css HTTP/1.1" 200 584
+[18/Oct/2025 20:37:36] "GET /static/css/style.css HTTP/1.1" 200 122
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:37:34
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:37:51
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:38:12
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:38:20
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+[18/Oct/2025 20:38:30] "GET /orden/nueva/ HTTP/1.1" 200 27589
+[18/Oct/2025 20:38:30] "GET /static/css/style.css HTTP/1.1" 200 122
+[18/Oct/2025 20:38:30] "GET /static/js/countdown.js HTTP/1.1" 200 1475
+[18/Oct/2025 20:38:30] "GET /static/css/custom.css HTTP/1.1" 200 584
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:38:27
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:39:15
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:39:40
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:39:59
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:40:07
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:40:15
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+[18/Oct/2025 20:40:27] "GET /orden/nueva/ HTTP/1.1" 200 27810
+[18/Oct/2025 20:40:27] "GET /static/css/custom.css HTTP/1.1" 200 584
+[18/Oct/2025 20:40:27] "GET /static/js/countdown.js HTTP/1.1" 200 1475
+[18/Oct/2025 20:40:27] "GET /static/css/style.css HTTP/1.1" 200 122
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:40:23
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:40:48
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:41:08
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:41:17
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:41:26
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:41:34
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+[18/Oct/2025 20:41:44] "GET /orden/nueva/ HTTP/1.1" 200 27932
+[18/Oct/2025 20:41:44] "GET /static/css/custom.css HTTP/1.1" 200 584
+[18/Oct/2025 20:41:44] "GET /static/js/countdown.js HTTP/1.1" 200 1475
+[18/Oct/2025 20:41:44] "GET /static/css/style.css HTTP/1.1" 200 122
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:41:41
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:42:07
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:42:26
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:42:33
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+[18/Oct/2025 20:42:43] "GET /orden/nueva/ HTTP/1.1" 200 27932
+[18/Oct/2025 20:42:44] "GET /static/css/style.css HTTP/1.1" 200 122
+[18/Oct/2025 20:42:44] "GET /static/css/custom.css HTTP/1.1" 200 584
+[18/Oct/2025 20:42:44] "GET /static/js/countdown.js HTTP/1.1" 200 1475
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:42:41
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:43:07
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:43:24
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:43:31
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:44:13
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:44:20
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:44:29
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:44:38
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+[18/Oct/2025 20:44:50] "GET /orden/nueva/ HTTP/1.1" 200 27589
+[18/Oct/2025 20:44:50] "GET /static/css/style.css HTTP/1.1" 200 122
+[18/Oct/2025 20:44:50] "GET /static/css/custom.css HTTP/1.1" 200 584
+[18/Oct/2025 20:44:50] "GET /static/js/countdown.js HTTP/1.1" 200 1475
+/app/certificacion/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:44:47
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader
+/app/SGICG/settings.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+October 18, 2025 - 20:45:11
+Django version 4.2.7, using settings 'SGICG.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+Watching for file changes with StatReloader

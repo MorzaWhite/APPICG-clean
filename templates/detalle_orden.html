@@ -91,31 +91,4 @@
 {% endfor %}
 </div>
 
-<hr class="my-4">
-
-<div class="card">
-    <div class="card-header">
-        <strong>Establecer Fecha de Entrega Manual</strong>
-    </div>
-    <div class="card-body">
-        <form method="post" action="{% url 'set_manual_date' orden.id %}">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="id_fecha_entrega_manual" class="form-label">
-                    Fecha de entrega actual (último ítem):
-                    <strong>
-                        {% if orden.items.last.fecha_limite_etapa %}
-                            {{ orden.items.last.fecha_limite_etapa|date:"Y-m-d H:i" }}
-                        {% else %}
-                            No establecida
-                        {% endif %}
-                    </strong>
-                </label>
-                <p>Puedes cambiarla usando el siguiente campo:</p>
-                {{ form.fecha_entrega_manual }}
-            </div>
-            <button type="submit" class="btn btn-info">Guardar Nueva Fecha Manual</button>
-        </form>
-    </div>
-</div>
 {% endblock %}

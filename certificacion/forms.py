@@ -2,7 +2,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from .models import Orden, ConfiguracionTiempos, Item
+from .models import Orden, ConfiguracionTiempos
 import re
 
 class OrdenForm(forms.ModelForm):
@@ -403,6 +403,7 @@ class FiltroAvanzadoForm(forms.Form):
         super().__init__(*args, **kwargs)
         
         # Llenar choices dinámicamente
+        from .models import Item
         self.fields['tipos_certificado'].choices = Item.TIPO_CERT_CHOICES
     
     def clean(self):

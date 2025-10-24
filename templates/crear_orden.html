@@ -194,13 +194,6 @@
                             <textarea name="comentarios" class="form-control" rows="1" id="comentarios_modal"></textarea>
                         </div>
 
-                        <!-- Decorative Stones -->
-                        <div class="mt-4">
-                            <h6>Piedras Decorativas</h6>
-                            <div id="decorative-stones-container"></div>
-                            <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#addDecorativeStoneModal">Añadir Piedra Decorativa</button>
-                        </div>
-
                         <div class="mt-4 d-flex justify-content-between">
                             <button type="button" class="btn btn-light prev-step">Anterior</button>
                             <button type="button" class="btn btn-success" id="add-item-to-order">Añadir Ítem a la Orden</button>
@@ -211,62 +204,34 @@
         </div>
     </div>
 </div>
-
-<!-- Add Decorative Stone Modal -->
-<div class="modal fade" id="addDecorativeStoneModal" tabindex="-1" aria-labelledby="addDecorativeStoneModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addDecorativeStoneModalLabel">Añadir Piedra Decorativa</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="stone-type" class="form-label">Tipo de Piedra</label>
-                    <input type="text" class="form-control" id="stone-type">
-                </div>
-                <div class="mb-3">
-                    <label for="stone-weight" class="form-label">Peso (cts)</label>
-                    <input type="number" class="form-control" id="stone-weight">
-                </div>
-                <div class="mb-3">
-                    <label for="stone-quantity" class="form-label">Cantidad</label>
-                    <input type="number" class="form-control" id="stone-quantity">
-                </div>
-                <div class="mb-3">
-                    <label for="stone-color" class="form-label">Color (opcional)</label>
-                    <input type="text" class="form-control" id="stone-color">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="save-decorative-stone">Guardar</button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block page_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Select2 components
     $('#tags').select2();
+    $('.gema-select, .forma-gema-select').select2({
+        dropdownParent: $('#addItemModal') // Attach to the modal
+    });
 
     let currentStep = 1;
     const totalSteps = 6;
     const progressBar = document.getElementById('progress-bar');
     const itemWizard = document.getElementById('item-wizard');
     let items = [];
-    let decorativeStones = [];
 
     function showStep(stepNumber) {
         const steps = itemWizard.querySelectorAll('.step-card');
         steps.forEach(step => {
             step.style.display = 'none';
+            step.classList.remove('active');
         });
+
         const nextStep = itemWizard.querySelector(`#step-${stepNumber}`);
         if (nextStep) {
             nextStep.style.display = 'block';
+            nextStep.classList.add('active');
             updateProgressBar(stepNumber);
             currentStep = stepNumber;
         }
@@ -275,6 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateProgressBar(stepNumber) {
         const percentage = (stepNumber / totalSteps) * 100;
         progressBar.style.width = `${percentage}%`;
+        progressBar.setAttribute('aria-valuenow', percentage);
         progressBar.textContent = `Paso ${stepNumber} de ${totalSteps}`;
     }
 
@@ -290,28 +256,28 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-     function resetWizard() {
-        // First, hide all step cards
-        const steps = itemWizard.querySelectorAll('.step-card');
-        steps.forEach(step => {
-            step.style.display = 'none';
-        });
-
-        // Then, reset the state and show the first step
-        currentStep = 1;
-        showStep(1);
-        decorativeStones = [];
+    function resetWizard() {
+        // Reset all form inputs, textareas, and selects
         const modal = document.getElementById('addItemModal');
-        modal.querySelectorAll('input, select, textarea').forEach(el => {
-            if (el.type === 'radio' || el.type === 'checkbox') {
+        modal.querySelectorAll('input, textarea, select').forEach(el => {
+            if (el.type === 'checkbox' || el.type === 'radio') {
                 el.checked = false;
-            } else if (el.multiple) {
-                Array.from(el.options).forEach(opt => opt.selected = false);
             } else {
                 el.value = '';
             }
         });
-        renderDecorativeStones();
+
+        // Specifically reset Select2 components
+        $('.gema-select, .forma-gema-select').val(null).trigger('change');
+
+        // Hide all steps, then show the first one
+        const steps = itemWizard.querySelectorAll('.step-card');
+        steps.forEach(step => {
+            step.style.display = 'none';
+            step.classList.remove('active');
+        });
+
+        showStep(1);
     }
 
     itemWizard.addEventListener('click', function(e) {
@@ -323,74 +289,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    const decorativeStoneModalEl = document.getElementById('addDecorativeStoneModal');
-    const decorativeStoneModal = new bootstrap.Modal(decorativeStoneModalEl);
-
-    document.getElementById('save-decorative-stone').addEventListener('click', function() {
-        const stone = {
-            tipo_piedra: document.getElementById('stone-type').value,
-            peso: document.getElementById('stone-weight').value,
-            cantidad: document.getElementById('stone-quantity').value,
-            color: document.getElementById('stone-color').value,
-        };
-        decorativeStones.push(stone);
-        renderDecorativeStones();
-
-        document.getElementById('stone-type').value = '';
-        document.getElementById('stone-weight').value = '';
-        document.getElementById('stone-quantity').value = '';
-        document.getElementById('stone-color').value = '';
-
-        decorativeStoneModal.hide();
-    });
-
-    function renderDecorativeStones() {
-        const container = document.getElementById('decorative-stones-container');
-        container.innerHTML = '';
-        decorativeStones.forEach((stone, index) => {
-            const stoneEl = document.createElement('div');
-            stoneEl.className = 'd-flex justify-content-between align-items-center mb-2';
-            stoneEl.innerHTML = `
-                <span>${stone.cantidad} x ${stone.tipo_piedra} (${stone.peso} cts)</span>
-                <button type="button" class="btn btn-sm btn-danger remove-stone" data-index="${index}">Eliminar</button>
-            `;
-            container.appendChild(stoneEl);
-        });
-    }
-
-    document.getElementById('decorative-stones-container').addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-stone')) {
-            const index = e.target.dataset.index;
-            decorativeStones.splice(index, 1);
-            renderDecorativeStones();
-        }
-    });
-
     const mainModalEl = document.getElementById('addItemModal');
     const mainModal = new bootstrap.Modal(mainModalEl);
+
+    mainModalEl.addEventListener('hidden.bs.modal', function (event) {
+        resetWizard();
+    });
 
     document.getElementById('add-item-to-order').addEventListener('click', function() {
         const itemData = {
             tipo_certificado: document.getElementById('tipo_certificado_modal').value,
             que_es: document.getElementById('que_es_modal').value,
             tipo_joya: document.getElementById('tipo_joya_modal').value,
-            gema_principal: Array.from(document.getElementById('gema_principal_modal').selectedOptions).map(o => o.value).join(','),
+            gema_principal: $('#gema_principal_modal').val(),
             cantidad_gemas: document.getElementById('cantidad_gemas_modal').value,
             metal: document.getElementById('metal_modal').value,
-            forma_gema: document.getElementById('forma_gema_modal').value,
+            forma_gema: $('#forma_gema_modal').val(),
             peso_gema: document.getElementById('peso_gema_modal').value,
             comentarios: document.getElementById('comentarios_modal').value,
-            piedras_decorativas: decorativeStones,
         };
         items.push(itemData);
         updateForm();
-
         mainModal.hide();
     });
-
-    mainModalEl.addEventListener('hidden.bs.modal', function (event) {
-        resetWizard();
-    })
 
     function updateForm() {
         const hiddenInputsContainer = document.getElementById('hidden-inputs-container');

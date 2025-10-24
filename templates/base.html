@@ -34,36 +34,5 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="{% static 'js/countdown.js' %}"></script>
     {% block page_scripts %}{% endblock %}
-
-    <!-- Toast Container -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
-        {% if messages %}
-            {% for message in messages %}
-            <div class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
-                <div class="toast-header {% if message.tags == 'success' %}bg-success text-white{% elif message.tags == 'error' %}bg-danger text-white{% else %}bg-secondary text-white{% endif %}">
-                    <strong class="me-auto">
-                        {% if message.tags == 'success' %}Éxito
-                        {% elif message.tags == 'error' %}Error
-                        {% else %}Notificación
-                        {% endif %}
-                    </strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-                <div class="toast-body">
-                    {{ message }}
-                </div>
-            </div>
-            {% endfor %}
-        {% endif %}
-    </div>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var toastElList = [].slice.call(document.querySelectorAll('.toast'));
-        var toastList = toastElList.map(function (toastEl) {
-            return new bootstrap.Toast(toastEl).show();
-        });
-    });
-    </script>
 </body>
 </html>

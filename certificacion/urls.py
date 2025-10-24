@@ -11,6 +11,5 @@ urlpatterns = [
     path('etapa/<str:etapa>/', views.vista_por_etapa, name='vista_etapa'),
     path('orden/<int:orden_id>/avanzar/', views.avanzar_etapa, name='avanzar_etapa'),
     path('configuracion/', views.configuracion_tiempos, name='configuracion_tiempos'),
-    path('orden/<int:orden_id>/set_manual_date/', views.set_manual_date, name='set_manual_date'),
     path('api/calcular_fecha_sugerida/', views.api_calcular_fecha_sugerida, name='api_calcular_fecha_sugerida'),
 ]

@@ -45,23 +45,6 @@
             </div>
         {% endfor %}
 
-        <hr>
-
-        <div class="card my-4">
-            <div class="card-header">
-                <strong>Establecer Fecha de Entrega Manual</strong>
-            </div>
-            <div class="card-body">
-                <form method="post" action="{% url 'set_manual_date' orden.id %}">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label for="id_fecha_entrega_manual" class="form-label">Si deseas, puedes establecer una fecha de entrega diferente a la sugerida:</label>
-                        {{ form.fecha_entrega_manual }}
-                    </div>
-                    <button type="submit" class="btn btn-info">Guardar Fecha Manual</button>
-                </form>
-            </div>
-        </div>
 
         <div class="text-center mt-4">
             <a href="{% url 'crear_orden' %}" class="btn btn-primary">Crear Otra Orden</a>
